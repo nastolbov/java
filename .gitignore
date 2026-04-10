@@ -1,0 +1,13 @@
+target/
+node_modules/
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+*.class
+*.jar
+*.war
+*.log
+frontend/generated/
