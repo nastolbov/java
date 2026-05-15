@@ -325,8 +325,29 @@ public class MainView extends VerticalLayout {
         tabs.addSelectedChangeListener(event -> {
             mainContent.removeAll();
             Tab selectedTab = event.getSelectedTab();
-            if (selectedTab == dashboardTab) {
-                // обновляем дашборд свежими данными из БД
+
+            // перечитываем данные из БД при каждом переключении вкладки
+            if (selectedTab == tab1) {
+                games.clear();
+                games.addAll(gameService.getGames());
+                grid.setItems(games);
+            } else if (selectedTab == tab2) {
+                purchases.clear();
+                purchases.addAll(purchaseService.getPurchases());
+                grid2.setItems(purchases);
+            } else if (selectedTab == tab3) {
+                customers.clear();
+                customers.addAll(customerService.getCustomers());
+                grid3.setItems(customers);
+            } else if (selectedTab == tab4) {
+                developers.clear();
+                developers.addAll(developerService.getDevelopers());
+                grid4.setItems(developers);
+            } else if (selectedTab == tab5) {
+                genres.clear();
+                genres.addAll(genreService.getGenres());
+                grid5.setItems(genres);
+            } else if (selectedTab == dashboardTab) {
                 dashboardContent.removeAll();
                 dashboardContent.add(new DashboardView(
                         purchaseService.getPurchases(),
@@ -336,6 +357,7 @@ public class MainView extends VerticalLayout {
                         developerService.getDevelopers()
                 ));
             }
+
             VerticalLayout content = tabContents.get(selectedTab);
             if (content != null) {
                 mainContent.add(content);
