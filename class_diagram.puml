@@ -1,17 +1,19 @@
 @startuml ClassDiagram
 skinparam monochrome true
 skinparam classAttributeIconSize 0
-skinparam classFontSize 11
+skinparam classFontSize 14
+skinparam classAttributeFontSize 13
 skinparam classFontName Arial
 skinparam linetype ortho
-skinparam nodesep 40
-skinparam ranksep 50
+skinparam nodesep 30
+skinparam ranksep 60
 skinparam padding 3
 skinparam shadowing false
 skinparam classBackgroundColor #FFFFFF
 skinparam classBorderColor #000000
 skinparam ArrowColor #000000
 
+together {
 class Customer {
   - customerID : int
   - name : String
@@ -122,6 +124,13 @@ class Purchase {
   + setGameID(int) : void
   + getCount() : int
   + setCount(int) : void
+}
+
+' Скрытые связи для компактной раскладки 5 моделей в один ряд
+Customer -[hidden]right- Developer
+Developer -[hidden]right- Game
+Game -[hidden]right- Genre
+Genre -[hidden]right- Purchase
 }
 
 class CustomerService {
