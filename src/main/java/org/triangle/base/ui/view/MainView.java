@@ -320,9 +320,22 @@ public class MainView extends VerticalLayout {
         add(mainContent);
 
         // переключение вкладок
+        Tab dashboardTab = tab6;
+        VerticalLayout dashboardContent = content6;
         tabs.addSelectedChangeListener(event -> {
             mainContent.removeAll();
             Tab selectedTab = event.getSelectedTab();
+            if (selectedTab == dashboardTab) {
+                // обновляем дашборд свежими данными из БД
+                dashboardContent.removeAll();
+                dashboardContent.add(new DashboardView(
+                        purchaseService.getPurchases(),
+                        genreService.getGenres(),
+                        gameService.getGames(),
+                        customerService.getCustomers(),
+                        developerService.getDevelopers()
+                ));
+            }
             VerticalLayout content = tabContents.get(selectedTab);
             if (content != null) {
                 mainContent.add(content);
