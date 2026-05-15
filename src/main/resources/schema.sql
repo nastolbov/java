@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS Game (
     StockQuantity INT NOT NULL,
     GenreID INT,
     DeveloperID INT,
-    FOREIGN KEY (GenreID) REFERENCES Genre(GenreID),
-    FOREIGN KEY (DeveloperID) REFERENCES Developer(DeveloperID)
+    FOREIGN KEY (GenreID) REFERENCES Genre(GenreID) ON DELETE CASCADE,
+    FOREIGN KEY (DeveloperID) REFERENCES Developer(DeveloperID) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Customer (
@@ -42,6 +42,6 @@ CREATE TABLE IF NOT EXISTS Purchase (
     Status VARCHAR(50),
     GameID INT,
     Count INT,
-    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID),
-    FOREIGN KEY (GameID) REFERENCES Game(GameID)
+    FOREIGN KEY (CustomerID) REFERENCES Customer(CustomerID) ON DELETE CASCADE,
+    FOREIGN KEY (GameID) REFERENCES Game(GameID) ON DELETE CASCADE
 );
