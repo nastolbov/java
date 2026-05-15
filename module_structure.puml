@@ -3,118 +3,48 @@ skinparam monochrome true
 skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam defaultFontSize 13
-skinparam componentFontSize 13
 skinparam packageFontSize 14
 skinparam packageFontStyle bold
-skinparam ArrowColor #000000
-skinparam ArrowFontSize 11
-skinparam componentBackgroundColor #FFFFFF
-skinparam componentBorderColor #000000
+skinparam classBackgroundColor #FFFFFF
 skinparam packageBackgroundColor #FFFFFF
-skinparam packageBorderColor #000000
-skinparam databaseBackgroundColor #FFFFFF
-skinparam databaseBorderColor #000000
-skinparam actorBorderColor #000000
-skinparam nodesep 30
-skinparam ranksep 40
+skinparam ArrowColor #000000
 
-actor "Пользователь" as User
-
-package "Уровень представления (UI)" {
-  [MainView] as MV
-  [DashboardView] as DV
-  package "Диалоги CRUD" {
-    [GameDialogManager] as GD
-    [PurchaseDialogManager] as PD
-    [CustomerDialogManager] as CD
-    [DeveloperDialogManager] as DD
-    [GenreDialogManager] as GenD
-  }
-  [FieldFilter] as FF
+package "Services" {
+  class CustomerService
+  class PurchaseService
+  class GameService
+  class DeveloperService
+  class GenreService
 }
 
-package "Уровень бизнес-логики (Service)" {
-  [GameService] as GS
-  [PurchaseService] as PS
-  [CustomerService] as CS
-  [DeveloperService] as DS
-  [GenreService] as GenS
+package "Models" {
+  class Game
+  class Customer
+  class Purchase
+  class Developer
+  class Genre
 }
 
-package "Уровень моделей (Model)" {
-  [Game] as MGame
-  [Purchase] as MPur
-  [Customer] as MCust
-  [Developer] as MDev
-  [Genre] as MGen
+package "Dialogs" {
+  class CustomerDialogManager
+  class PurchaseDialogManager
+  class GameDialogManager
+  class DeveloperDialogManager
+  class GenreDialogManager
 }
 
-package "Уровень данных" {
-  database "H2 Database\n(computer_games)" as DB {
-    [schema.sql]
-    [data.sql]
-  }
+package "Component" {
+  class Application
+  class FieldFilter
 }
 
-package "Spring Boot / Vaadin Framework" {
-  [Application] as APP
-  [Vaadin UI Engine]
-  [Spring DI Container]
+package "Views" {
+  class MainView
+  class DashboardView
 }
 
-' Пользователь работает через браузер
-User --> MV : HTTP / Браузер
-
-' MainView → диалоги и дашборд
-MV --> GD
-MV --> PD
-MV --> CD
-MV --> DD
-MV --> GenD
-MV --> DV
-MV --> FF
-
-' UI → сервисы
-MV --> GS
-MV --> PS
-MV --> CS
-MV --> DS
-MV --> GenS
-
-GD --> GS
-PD --> PS
-CD --> CS
-DD --> DS
-GenD --> GenS
-
-DV --> GS
-DV --> PS
-DV --> CS
-DV --> DS
-DV --> GenS
-
-' Сервисы → модели
-GS --> MGame
-PS --> MPur
-CS --> MCust
-DS --> MDev
-GenS --> MGen
-
-' Сервисы → база данных (JDBC)
-GS --> DB : JDBC
-PS --> DB : JDBC
-CS --> DB : JDBC
-DS --> DB : JDBC
-GenS --> DB : JDBC
-
-' Spring Boot загружает приложение
-APP --> [Spring DI Container]
-APP --> [Vaadin UI Engine]
-[Spring DI Container] ..> GS
-[Spring DI Container] ..> PS
-[Spring DI Container] ..> CS
-[Spring DI Container] ..> DS
-[Spring DI Container] ..> GenS
-[Vaadin UI Engine] ..> MV
+Services --> Models
+Models --> Dialogs
+Component --> Views
 
 @enduml
