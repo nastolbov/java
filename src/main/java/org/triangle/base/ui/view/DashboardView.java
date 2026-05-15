@@ -11,6 +11,7 @@ import com.vaadin.flow.component.grid.Grid;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
 import java.util.*;
+import java.util.Locale;
 
 import org.triangle.base.Class.Model.*;
 
@@ -122,36 +123,7 @@ public class DashboardView extends VerticalLayout {
 
         H3 genreTitle = new H3("Распределение покупок по жанрам");
 
-        // полоски по жанрам
-        VerticalLayout pieLayout = new VerticalLayout();
-        pieLayout.getStyle().set("padding", "10px");
         int totalOrders = purchases.size();
-        for (Map.Entry<String, Integer> entry : genreCounts.entrySet()) {
-            String genreName = entry.getKey();
-            int count = entry.getValue();
-            double percent = totalOrders > 0 ? (double) count / totalOrders * 100 : 0;
-            int barWidth = (int) (percent * 4);
-
-            HorizontalLayout row = new HorizontalLayout();
-            row.setAlignItems(Alignment.CENTER);
-            row.setWidthFull();
-
-            Span nameLabel = new Span(genreName);
-            nameLabel.setWidth("150px");
-
-            Div bar = new Div();
-            bar.getStyle()
-                    .set("background-color", getColor(genreCounts.keySet().stream().toList().indexOf(genreName)))
-                    .set("height", "24px")
-                    .set("width", barWidth + "px")
-                    .set("border-radius", "4px");
-
-            Span info = new Span(String.format("%d шт (%.1f%%)", count, percent));
-            info.getStyle().set("margin-left", "8px");
-
-            row.add(nameLabel, bar, info);
-            pieLayout.add(row);
-        }
 
         Grid<Map.Entry<String, Integer>> genreGrid = new Grid<>();
         genreGrid.addColumn(Map.Entry::getKey).setHeader("Жанр");
@@ -164,8 +136,56 @@ public class DashboardView extends VerticalLayout {
         genreGrid.setHeight("250px");
         genreGrid.getColumns().forEach(col -> col.setResizable(true));
 
-        dashboardLayout.add(genreTitle, pieLayout, genreGrid);
+        dashboardLayout.add(genreTitle, createPieChart(genreCounts, totalOrders), genreGrid);
         return dashboardLayout;
+    }
+
+    private Component createPieChart(Map<String, Integer> genreCounts, int total) {
+        if (total == 0) return new Div();
+
+        StringBuilder paths = new StringBuilder();
+        StringBuilder legend = new StringBuilder();
+
+        double startAngle = -90.0;
+        int colorIndex = 0;
+        int cx = 150, cy = 150, r = 130;
+
+        for (Map.Entry<String, Integer> entry : genreCounts.entrySet()) {
+            double percent = (double) entry.getValue() / total;
+            double sweep = percent * 360.0;
+            double endAngle = startAngle + sweep;
+
+            double x1 = cx + r * Math.cos(Math.toRadians(startAngle));
+            double y1 = cy + r * Math.sin(Math.toRadians(startAngle));
+            double x2 = cx + r * Math.cos(Math.toRadians(endAngle));
+            double y2 = cy + r * Math.sin(Math.toRadians(endAngle));
+
+            int largeArc = sweep > 180 ? 1 : 0;
+            String color = getColor(colorIndex);
+
+            paths.append(String.format(Locale.US,
+                "<path d='M %d %d L %.4f %.4f A %d %d 0 %d 1 %.4f %.4f Z' fill='%s' stroke='white' stroke-width='2'/>",
+                cx, cy, x1, y1, r, r, largeArc, x2, y2, color));
+
+            legend.append(String.format(
+                "<div style='display:flex;align-items:center;margin:6px 0'>" +
+                "<div style='width:16px;height:16px;min-width:16px;background:%s;border-radius:3px;margin-right:8px'></div>" +
+                "<span style='font-size:14px'>%s — %d шт. (%.1f%%)</span></div>",
+                color, entry.getKey(), entry.getValue(), percent * 100));
+
+            startAngle = endAngle;
+            colorIndex++;
+        }
+
+        String html = String.format(
+            "<div style='display:flex;align-items:center;gap:32px;flex-wrap:wrap;padding:10px'>" +
+            "<svg width='300' height='300' viewBox='0 0 300 300'>%s</svg>" +
+            "<div>%s</div></div>",
+            paths, legend);
+
+        Div container = new Div();
+        container.getElement().setProperty("innerHTML", html);
+        return container;
     }
 
     private String getColor(int index) {
