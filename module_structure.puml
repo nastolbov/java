@@ -45,6 +45,7 @@ package "Views" {
 
 Services --> Models
 Models --> Dialogs
+Dialogs --> Views
 Component --> Views
 
 @enduml
