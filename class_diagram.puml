@@ -1,0 +1,340 @@
+@startuml ClassDiagram
+title Диаграмма классов — Магазин компьютерных игр
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classFontName Arial
+skinparam linetype ortho
+skinparam padding 4
+skinparam nodesep 60
+skinparam ranksep 70
+
+' =================== MODELS ===================
+package "Model" #E8F4FD {
+
+  class Customer {
+    - customerID : int
+    - name : String
+    - email : String
+    - phoneNumber : String
+    - address : String
+    - registrationDate : LocalDate
+    --
+    + Customer(id, name, email, phone, address, date)
+    + getCustomerID() : int
+    + setCustomerID(int) : void
+    + getName() : String
+    + setName(String) : void
+    + getEmail() : String
+    + setEmail(String) : void
+    + getPhoneNumber() : String
+    + setPhoneNumber(String) : void
+    + getAddress() : String
+    + setAddress(String) : void
+    + getRegistrationDate() : LocalDate
+    + setRegistrationDate(LocalDate) : void
+  }
+
+  class Developer {
+    - developerID : int
+    - name : String
+    - contactName : String
+    - phoneNumber : String
+    - email : String
+    - address : String
+    --
+    + Developer(id, name, contact, phone, email, addr)
+    + getDeveloperID() : int
+    + setDeveloperID(int) : void
+    + getName() : String
+    + setName(String) : void
+    + getContactName() : String
+    + setContactName(String) : void
+    + getPhoneNumber() : String
+    + setPhoneNumber(String) : void
+    + getEmail() : String
+    + setEmail(String) : void
+    + getAddress() : String
+    + setAddress(String) : void
+  }
+
+  class Game {
+    - gameID : int
+    - title : String
+    - description : String
+    - price : double
+    - stockQuantity : int
+    - genreID : int
+    - developerID : int
+    --
+    + Game(id, title, desc, price, qty, genreID, devID)
+    + getGameID() : int
+    + setGameID(int) : void
+    + getTitle() : String
+    + setTitle(String) : void
+    + getDescription() : String
+    + setDescription(String) : void
+    + getPrice() : double
+    + setPrice(double) : void
+    + getStockQuantity() : int
+    + setStockQuantity(int) : void
+    + getGenreID() : int
+    + setGenreID(int) : void
+    + getDeveloperID() : int
+    + setDeveloperID(int) : void
+  }
+
+  class Genre {
+    - genreID : int
+    - name : String
+    - description : String
+    --
+    + Genre(id, name, description)
+    + getGenreID() : int
+    + setGenreID(int) : void
+    + getName() : String
+    + setName(String) : void
+    + getDescription() : String
+    + setDescription(String) : void
+  }
+
+  class Purchase {
+    - purchaseID : int
+    - customerID : int
+    - purchaseDate : LocalDate
+    - totalAmount : double
+    - status : String
+    - gameID : int
+    - count : int
+    --
+    + Purchase(id, custID, date, total, status, gameID, count)
+    + getPurchaseID() : int
+    + setPurchaseID(int) : void
+    + getCustomerID() : int
+    + setCustomerID(int) : void
+    + getPurchaseDate() : LocalDate
+    + setPurchaseDate(LocalDate) : void
+    + getTotalAmount() : double
+    + setTotalAmount(double) : void
+    + getStatus() : String
+    + setStatus(String) : void
+    + getGameID() : int
+    + setGameID(int) : void
+    + getCount() : int
+    + setCount(int) : void
+  }
+}
+
+' =================== SERVICES ===================
+package "Service" #FFF4E0 {
+
+  class CustomerService <<@Service>> {
+    - {static} URL : String = "jdbc:h2:mem:computer_games"
+    - {static} USER : String = "sa"
+    - {static} PASSWORD : String = ""
+    --
+    + getCustomers() : List<Customer>
+    + createCustomer(Customer) : void
+    + updateCustomer(Customer) : void
+    + deleteCustomer(int) : void
+  }
+
+  class DeveloperService <<@Service>> {
+    - {static} URL : String
+    - {static} USER : String
+    - {static} PASSWORD : String
+    --
+    + getDevelopers() : List<Developer>
+    + createDeveloper(Developer) : void
+    + updateDeveloper(Developer) : void
+    + deleteDeveloper(int) : void
+  }
+
+  class GameService <<@Service>> {
+    - {static} URL : String
+    - {static} USER : String
+    - {static} PASSWORD : String
+    --
+    + getGames() : List<Game>
+    + createGame(Game) : void
+    + updateGame(Game) : void
+    + deleteGame(int) : void
+  }
+
+  class GenreService <<@Service>> {
+    - {static} URL : String
+    - {static} USER : String
+    - {static} PASSWORD : String
+    --
+    + getGenres() : List<Genre>
+    + createGenre(Genre) : void
+    + updateGenre(Genre) : void
+    + deleteGenre(int) : void
+  }
+
+  class PurchaseService <<@Service>> {
+    - {static} URL : String
+    - {static} USER : String
+    - {static} PASSWORD : String
+    --
+    + getPurchases() : List<Purchase>
+    + createPurchase(Purchase) : void
+    + updatePurchase(Purchase) : void
+    + deletePurchase(int) : void
+  }
+}
+
+' =================== VIEWS ===================
+package "View" #E8F8E8 {
+
+  class MainView <<@Route>> {
+    - tabs : Tabs
+    - tabContents : Map<Tab, VerticalLayout>
+    - gameService : GameService
+    - purchaseService : PurchaseService
+    - customerService : CustomerService
+    - developerService : DeveloperService
+    - genreService : GenreService
+    - dashboard : DashboardView
+    --
+    + MainView(gameService, purchaseService, customerService, developerService, genreService)
+  }
+
+  class DashboardView {
+    - games : List<Game>
+    - purchases : List<Purchase>
+    - customers : List<Customer>
+    - developers : List<Developer>
+    - genres : List<Genre>
+    --
+    + DashboardView(purchases, genres, games, customers, developers)
+    - createDashboard() : Component
+    - createHighlightCard(title, value) : Component
+    - getColor(int) : String
+    + redraw() : void
+  }
+}
+
+' =================== DIALOGS ===================
+package "Dialog" #FDE8F4 {
+
+  class CustomerDialogManager {
+    - customerService : CustomerService
+    - grid : Grid<Customer>
+    --
+    + CustomerDialogManager(CustomerService, Grid<Customer>)
+    + openAddCustomerDialog(List<Customer>) : void
+    + openEditCustomerDialog() : void
+    + openDelCustomerDialog() : void
+  }
+
+  class DeveloperDialogManager {
+    - developerService : DeveloperService
+    - grid : Grid<Developer>
+    --
+    + DeveloperDialogManager(DeveloperService, Grid<Developer>)
+    + openAddDeveloperDialog(List<Developer>) : void
+    + openEditDeveloperDialog() : void
+    + openDelDeveloperDialog(List<Developer>) : void
+  }
+
+  class GameDialogManager {
+    - gameService : GameService
+    - grid : Grid<Game>
+    --
+    + GameDialogManager(GameService, Grid<Game>)
+    + openAddGameDialog(List<Game>) : void
+    + openEditGameDialog() : void
+    + openDelGameDialog(List<Game>) : void
+  }
+
+  class GenreDialogManager {
+    - genreService : GenreService
+    - grid : Grid<Genre>
+    --
+    + GenreDialogManager(GenreService, Grid<Genre>)
+    + openAddGenreDialog(List<Genre>) : void
+    + openEditGenreDialog() : void
+    + openDelGenreDialog() : void
+  }
+
+  class PurchaseDialogManager {
+    - purchaseService : PurchaseService
+    - grid : Grid<Purchase>
+    --
+    + PurchaseDialogManager(PurchaseService, Grid<Purchase>)
+    + openAddPurchaseDialog(List<Purchase>) : void
+    + openEditPurchaseDialog() : void
+    + openDelPurchaseDialog(List<Purchase>) : void
+  }
+}
+
+' =================== COMPONENTS ===================
+package "Components" #F0F0F0 {
+  class "FieldFilter<T, V>" as FieldFilter {
+    - items : List<T>
+    - availableValues : Set<V>
+    - fieldExtractor : Function<T, V>
+    --
+    + FieldFilter(List<T>, Function<T, V>)
+    + getAvailableValues() : List<V>
+    + filterByValue(V) : List<T>
+  }
+}
+
+' =================== APPLICATION ===================
+class Application <<@SpringBootApplication>> {
+  + {static} main(String[]) : void
+}
+
+' =================== СВЯЗИ МЕЖДУ КЛАССАМИ ===================
+
+' Логические связи моделей (по внешним ключам БД)
+Game "*" --> "1" Genre : genreID
+Game "*" --> "1" Developer : developerID
+Purchase "*" --> "1" Customer : customerID
+Purchase "*" --> "1" Game : gameID
+
+' Сервисы работают с моделями
+CustomerService ..> Customer : <<creates/returns>>
+DeveloperService ..> Developer : <<creates/returns>>
+GameService ..> Game : <<creates/returns>>
+GenreService ..> Genre : <<creates/returns>>
+PurchaseService ..> Purchase : <<creates/returns>>
+
+' MainView внедряет сервисы (Spring DI)
+MainView o--> CustomerService
+MainView o--> DeveloperService
+MainView o--> GameService
+MainView o--> GenreService
+MainView o--> PurchaseService
+MainView *--> DashboardView : содержит
+
+' DashboardView использует модели
+DashboardView ..> Game
+DashboardView ..> Purchase
+DashboardView ..> Customer
+DashboardView ..> Developer
+DashboardView ..> Genre
+
+' Диалоги используют сервисы
+CustomerDialogManager o--> CustomerService
+DeveloperDialogManager o--> DeveloperService
+GameDialogManager o--> GameService
+GenreDialogManager o--> GenreService
+PurchaseDialogManager o--> PurchaseService
+
+' MainView создаёт диалоги
+MainView ..> CustomerDialogManager : <<creates>>
+MainView ..> DeveloperDialogManager : <<creates>>
+MainView ..> GameDialogManager : <<creates>>
+MainView ..> GenreDialogManager : <<creates>>
+MainView ..> PurchaseDialogManager : <<creates>>
+
+' MainView использует FieldFilter для фильтрации
+MainView ..> FieldFilter : <<uses>>
+
+' Application — точка входа Spring Boot
+Application ..> MainView : <<bootstraps>>
+
+@enduml
