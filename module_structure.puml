@@ -43,9 +43,9 @@ package "Views" {
   class DashboardView
 }
 
-Services --> Models
-Models --> Dialogs
-Dialogs --> Views
-Component --> Views
+Services -down-> Models
+Models -down-> Dialogs
+Dialogs -right-> Views
+Component -down-> Views
 
 @enduml
