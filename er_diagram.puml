@@ -1,0 +1,76 @@
+@startuml ERDiagram
+skinparam defaultFontName Arial
+skinparam defaultFontSize 28
+skinparam classFontSize 32
+skinparam classAttributeFontSize 28
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #4A6FA5
+skinparam classHeaderBackgroundColor #D6E4F5
+skinparam ArrowColor #000000
+skinparam ArrowThickness 3
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 100
+skinparam ranksep 110
+skinparam padding 8
+
+hide circle
+hide methods
+
+entity "Genre" as Genre {
+  + <b>GenreID</b> : INT <<PK>>
+  --
+    Name : VARCHAR(100)
+    Description : VARCHAR(500)
+}
+
+entity "Developer" as Developer {
+  + <b>DeveloperID</b> : INT <<PK>>
+  --
+    Name : VARCHAR(200)
+    ContactName : VARCHAR(150)
+    PhoneNumber : VARCHAR(20)
+    Email : VARCHAR(100)
+    Address : VARCHAR(300)
+}
+
+entity "Game" as Game {
+  + <b>GameID</b> : INT <<PK>>
+  --
+  # GenreID : INT <<FK>>
+  # DeveloperID : INT <<FK>>
+  --
+    Title : VARCHAR(200)
+    Description : VARCHAR(500)
+    Price : DOUBLE
+    StockQuantity : INT
+}
+
+entity "Customer" as Customer {
+  + <b>CustomerID</b> : INT <<PK>>
+  --
+    Name : VARCHAR(200)
+    Email : VARCHAR(100)
+    PhoneNumber : VARCHAR(20)
+    Address : VARCHAR(300)
+    RegistrationDate : DATE
+}
+
+entity "Purchase" as Purchase {
+  + <b>PurchaseID</b> : INT <<PK>>
+  --
+  # CustomerID : INT <<FK>>
+  # GameID : INT <<FK>>
+  --
+    PurchaseDate : DATE
+    TotalAmount : DOUBLE
+    Status : VARCHAR(50)
+    Count : INT
+}
+
+Genre ||--o{ Game
+Developer ||--o{ Game
+Customer ||--o{ Purchase
+Game ||--o{ Purchase
+
+@enduml
