@@ -4,7 +4,6 @@ import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.H3;
 import com.vaadin.flow.component.html.Span;
 
 import java.time.LocalDate;
@@ -23,171 +22,204 @@ public class DashboardView extends VerticalLayout {
     private List<Developer> developers;
     private List<Genre> genres;
 
-    private static final Set<String> PAID = Set.of("Завершён", "Оплачено");
+    private static final Set<String> PAID    = Set.of("Завершён", "Оплачено");
     private static final Set<String> PENDING = Set.of("В обработке", "Ожидание");
 
     public DashboardView(List<Purchase> purchases, List<Genre> genres, List<Game> games,
                          List<Customer> customers, List<Developer> developers) {
-        this.games = games;
-        this.customers = customers;
-        this.purchases = purchases;
-        this.developers = developers;
-        this.genres = genres;
-        setPadding(false);
-        setSpacing(false);
+        this.games = games; this.customers = customers;
+        this.purchases = purchases; this.developers = developers; this.genres = genres;
+        setPadding(false); setSpacing(false);
         add(createDashboard());
     }
 
     private Component createDashboard() {
-        VerticalLayout layout = new VerticalLayout();
-        layout.addClassName("main-content");
-        layout.setPadding(false);
-        layout.setSpacing(false);
+        VerticalLayout root = new VerticalLayout();
+        root.addClassName("main-content");
+        root.setPadding(false);
+        root.setSpacing(false);
+        root.getStyle().set("gap", "16px");
 
         // ── разбивка по статусу ──────────────────────────────────────
-        List<Purchase> completed = purchases.stream()
-                .filter(p -> p.getStatus() != null && PAID.contains(p.getStatus()))
-                .collect(Collectors.toList());
-        List<Purchase> pending = purchases.stream()
-                .filter(p -> p.getStatus() != null && PENDING.contains(p.getStatus()))
-                .collect(Collectors.toList());
+        List<Purchase> completed = filter(PAID);
+        List<Purchase> pending   = filter(PENDING);
         List<Purchase> cancelled = purchases.stream()
-                .filter(p -> "Отменено".equals(p.getStatus()))
-                .collect(Collectors.toList());
+                .filter(p -> "Отменено".equals(p.getStatus())).collect(Collectors.toList());
 
-        double revenue = completed.stream().mapToDouble(Purchase::getTotalAmount).sum();
+        double revenue    = completed.stream().mapToDouble(Purchase::getTotalAmount).sum();
         double pendingAmt = pending.stream().mapToDouble(Purchase::getTotalAmount).sum();
+        int    total      = purchases.size();
 
         // ── карточки ─────────────────────────────────────────────────
         HorizontalLayout cards = new HorizontalLayout();
-        cards.addClassName("dashboard-cards");
         cards.setWidthFull();
-        cards.getStyle().set("padding", "20px 0 16px 0").set("gap", "16px").set("flex-wrap", "wrap");
+        cards.getStyle().set("gap", "14px").set("flex-wrap", "wrap").set("align-items", "stretch")
+                        .set("padding", "0");
+
+        double convRate = total > 0 ? completed.size() * 100.0 / total : 0;
 
         cards.add(
-            card("Выручка",           String.format("%.0f ₽", revenue),          "card-success",  "Только оплаченные"),
-            card("Завершено покупок",  String.valueOf(completed.size()),            "card-primary",  "Оплачено / Завершён"),
-            card("В обработке",        String.valueOf(pending.size()),              "card-warning",  String.format("%.0f ₽ ожидает", pendingAmt)),
-            card("Отменено",           String.valueOf(cancelled.size()),            "card-danger",   "Отменённые заказы"),
-            card("Покупателей",        String.valueOf(customers.size()),            "card-neutral",  "Всего в базе"),
-            card("Игр в каталоге",    String.valueOf(games.size()),                "card-neutral",  "Всего позиций")
-        );
-        layout.add(cards);
+            metricCard("💰", "Выручка",           money(revenue),
+                       "только оплаченные",        "card-success",
+                       completed.size() * 100.0 / Math.max(1, total)),
 
-        // ── продажи по месяцам (только оплаченные) ───────────────────
+            metricCard("🛒", "Завершено покупок",  String.valueOf(completed.size()),
+                       String.format("%.0f%% конверсия", convRate), "card-primary",
+                       convRate),
+
+            metricCard("⏳", "В обработке",        String.valueOf(pending.size()),
+                       pendingAmt > 0 ? money(pendingAmt) + " ожидает" : "нет ожидающих",
+                       "card-warning",
+                       total > 0 ? pending.size() * 100.0 / total : 0),
+
+            metricCard("✕",  "Отменено",           String.valueOf(cancelled.size()),
+                       total > 0 ? String.format("%.0f%% от всех", cancelled.size() * 100.0 / total) : "—",
+                       "card-danger",
+                       total > 0 ? cancelled.size() * 100.0 / total : 0),
+
+            metricCard("👥", "Покупателей",        String.valueOf(customers.size()),
+                       "активных клиентов",        "card-neutral", 100),
+
+            metricCard("🎮", "Игр в каталоге",    String.valueOf(games.size()),
+                       "позиций",                  "card-neutral", 100)
+        );
+        root.add(cards);
+
+        // ── два блока рядом ───────────────────────────────────────────
+        HorizontalLayout twoCol = new HorizontalLayout();
+        twoCol.setWidthFull();
+        twoCol.setAlignItems(Alignment.START);
+        twoCol.getStyle().set("gap", "16px").set("align-items", "stretch");
+
+        // левый блок — продажи по месяцам
         Div salesSection = new Div();
         salesSection.addClassName("dashboard-section");
-        salesSection.getStyle().set("margin-bottom", "16px");
-
-        Div salesTitle = new Div();
-        salesTitle.addClassName("section-title");
-        salesTitle.setText("Продажи по месяцам (завершённые)");
+        salesSection.getStyle().set("flex", "1");
+        Div salesTitle = new Div(); salesTitle.addClassName("section-title");
+        salesTitle.setText("📈  Продажи по месяцам");
         salesSection.add(salesTitle);
-
         Map<String, Double> salesByMonth = buildSalesByMonth(completed);
         salesSection.add(buildBarChart(salesByMonth));
-        layout.add(salesSection);
 
-        // ── распределение по жанрам (только оплаченные) ──────────────
-        Map<String, Integer> genreCounts = buildGenreCounts(completed);
-        int total = completed.size();
-
+        // правый блок — жанры
         Div genreSection = new Div();
         genreSection.addClassName("dashboard-section");
-
-        Div genreTitle = new Div();
-        genreTitle.addClassName("section-title");
-        genreTitle.setText("Распределение по жанрам (завершённые)");
+        genreSection.getStyle().set("flex", "1");
+        Div genreTitle = new Div(); genreTitle.addClassName("section-title");
+        genreTitle.setText("🥧  Распределение по жанрам");
         genreSection.add(genreTitle);
 
-        HorizontalLayout genreRow = new HorizontalLayout();
-        genreRow.setWidthFull();
-        genreRow.setAlignItems(Alignment.CENTER);
-        genreRow.add(createPieChart(genreCounts, total));
-        genreRow.add(buildGenreTable(genreCounts, total));
-        genreSection.add(genreRow);
-        layout.add(genreSection);
+        Map<String, Integer> genreCounts = buildGenreCounts(completed);
+        HorizontalLayout pieRow = new HorizontalLayout();
+        pieRow.setAlignItems(Alignment.CENTER);
+        pieRow.getStyle().set("gap", "24px").set("flex-wrap", "wrap");
+        pieRow.add(createPieChart(genreCounts, completed.size()));
+        pieRow.add(buildGenreTable(genreCounts, completed.size()));
+        genreSection.add(pieRow);
 
-        return layout;
+        twoCol.add(salesSection, genreSection);
+        root.add(twoCol);
+
+        // ── топ-3 игры по выручке ─────────────────────────────────────
+        Div topSection = new Div();
+        topSection.addClassName("dashboard-section");
+        Div topTitle = new Div(); topTitle.addClassName("section-title");
+        topTitle.setText("🏆  Топ игр по выручке");
+        topSection.add(topTitle);
+        topSection.add(buildTopGames(completed));
+        root.add(topSection);
+
+        return root;
     }
 
     // ── карточка метрики ─────────────────────────────────────────────
-    private Component card(String title, String value, String variant, String sub) {
+    private Component metricCard(String icon, String title, String value,
+                                  String sub, String variant, double progressPct) {
         Div card = new Div();
         card.addClassName("highlight-card");
         card.addClassName(variant);
-        card.getStyle().set("flex", "1").set("min-width", "160px");
+        card.getStyle().set("flex", "1").set("min-width", "150px").set("position", "relative");
+
+        // иконка в правом верхнем углу
+        Div iconEl = new Div();
+        iconEl.addClassName("metric-icon");
+        iconEl.setText(icon);
+        card.add(iconEl);
 
         Div t = new Div(); t.addClassName("highlight-card-title"); t.setText(title);
         Div v = new Div(); v.addClassName("highlight-card-value"); v.setText(value);
         Div s = new Div(); s.addClassName("highlight-card-sub");   s.setText(sub);
 
-        card.add(t, v, s);
+        // прогресс-бар внизу карточки
+        Div progressWrap = new Div();
+        progressWrap.addClassName("metric-progress-bg");
+        Div progressBar = new Div();
+        progressBar.addClassName("metric-progress-fill");
+        progressBar.addClassName(variant);
+        progressBar.getStyle().set("width", Math.min(100, progressPct) + "%");
+        progressWrap.add(progressBar);
+
+        card.add(t, v, s, progressWrap);
         return card;
     }
 
     // ── данные по месяцам ─────────────────────────────────────────────
     private Map<String, Double> buildSalesByMonth(List<Purchase> list) {
         List<LocalDate> dates = list.stream()
-                .map(Purchase::getPurchaseDate)
-                .filter(Objects::nonNull)
-                .sorted()
-                .collect(Collectors.toList());
-
-        Map<String, Double> result = new LinkedHashMap<>();
-        for (LocalDate d : dates) {
-            String m = d.getMonth().getDisplayName(TextStyle.FULL, Locale.forLanguageTag("ru"));
-            result.putIfAbsent(m, 0.0);
-        }
+                .map(Purchase::getPurchaseDate).filter(Objects::nonNull)
+                .sorted().collect(Collectors.toList());
+        Map<String, Double> res = new LinkedHashMap<>();
+        for (LocalDate d : dates) res.putIfAbsent(monthName(d), 0.0);
         for (Purchase p : list) {
             if (p.getPurchaseDate() == null) continue;
-            String m = p.getPurchaseDate().getMonth().getDisplayName(TextStyle.FULL, Locale.forLanguageTag("ru"));
-            result.put(m, result.getOrDefault(m, 0.0) + p.getTotalAmount());
+            String m = monthName(p.getPurchaseDate());
+            res.put(m, res.getOrDefault(m, 0.0) + p.getTotalAmount());
         }
-        return result;
+        return res;
+    }
+
+    private String monthName(LocalDate d) {
+        return d.getMonth().getDisplayName(TextStyle.FULL, Locale.forLanguageTag("ru"));
     }
 
     // ── горизонтальный бар-чарт ───────────────────────────────────────
-    private Component buildBarChart(Map<String, Double> salesByMonth) {
+    private Component buildBarChart(Map<String, Double> data) {
         VerticalLayout chart = new VerticalLayout();
-        chart.setPadding(false);
-        chart.setSpacing(false);
+        chart.setPadding(false); chart.setSpacing(false);
 
-        if (salesByMonth.isEmpty()) {
-            Span empty = new Span("Нет данных");
-            empty.getStyle().set("color", "#9e9e9e").set("font-size", "14px");
-            chart.add(empty);
-            return chart;
+        if (data.isEmpty()) {
+            Span e = new Span("Нет данных");
+            e.getStyle().set("color", "#9e9e9e").set("font-size", "14px");
+            chart.add(e); return chart;
         }
 
-        double max = salesByMonth.values().stream().mapToDouble(Double::doubleValue).max().orElse(1);
+        double max = data.values().stream().mapToDouble(Double::doubleValue).max().orElse(1);
 
-        for (Map.Entry<String, Double> e : salesByMonth.entrySet()) {
+        for (Map.Entry<String, Double> e : data.entrySet()) {
             HorizontalLayout row = new HorizontalLayout();
             row.setAlignItems(Alignment.CENTER);
             row.setWidthFull();
-            row.getStyle().set("gap", "12px").set("margin-bottom", "8px");
+            row.getStyle().set("gap", "10px").set("margin-bottom", "10px");
 
             Span label = new Span(e.getKey());
-            label.getStyle().set("width", "100px").set("font-size", "13px")
-                    .set("color", "#616161").set("flex-shrink", "0");
+            label.getStyle().set("width", "80px").set("font-size", "13px")
+                    .set("color", "#6b7280").set("flex-shrink", "0");
 
-            int pct = (int) (e.getValue() / max * 100);
+            double pct = e.getValue() / max * 100;
             Div barWrap = new Div();
-            barWrap.getStyle().set("flex", "1").set("background", "#f0f2f5")
-                    .set("border-radius", "4px").set("height", "28px").set("position", "relative");
-
+            barWrap.getStyle().set("flex", "1").set("background", "#f1f5f9")
+                    .set("border-radius", "6px").set("height", "26px").set("overflow", "hidden");
             Div bar = new Div();
             bar.getStyle()
-                    .set("background", "linear-gradient(90deg,#1a73e8,#4a9eff)")
+                    .set("background", "linear-gradient(90deg,#1a73e8 0%,#60a5fa 100%)")
                     .set("width", pct + "%").set("height", "100%")
-                    .set("border-radius", "4px").set("min-width", "4px")
-                    .set("transition", "width 0.4s");
+                    .set("border-radius", "6px").set("min-width", pct > 0 ? "4px" : "0");
             barWrap.add(bar);
 
-            Span val = new Span(String.format("%.0f ₽", e.getValue()));
-            val.getStyle().set("font-size", "13px").set("font-weight", "600")
-                    .set("color", "#212121").set("flex-shrink", "0").set("width", "90px");
+            Span val = new Span(money(e.getValue()));
+            val.getStyle().set("font-size", "13px").set("font-weight", "700")
+                    .set("color", "#1a1f36").set("flex-shrink", "0").set("min-width", "100px")
+                    .set("text-align", "right");
 
             row.add(label, barWrap, val);
             chart.add(row);
@@ -195,118 +227,162 @@ public class DashboardView extends VerticalLayout {
         return chart;
     }
 
-    // ── данные по жанрам ─────────────────────────────────────────────
+    // ── жанры ─────────────────────────────────────────────────────────
     private Map<String, Integer> buildGenreCounts(List<Purchase> list) {
         Map<Integer, Integer> gameToGenre = new HashMap<>();
         for (Game g : games) gameToGenre.put(g.getGameID(), g.getGenreID());
-
         Map<Integer, String> genreIdToName = new HashMap<>();
         for (Genre g : genres) genreIdToName.put(g.getGenreID(), g.getName());
-
-        Map<String, Integer> result = new LinkedHashMap<>();
+        Map<String, Integer> res = new LinkedHashMap<>();
         for (Purchase p : list) {
-            Integer genreId = gameToGenre.get(p.getGameID());
-            String name = genreIdToName.getOrDefault(genreId, "Прочее");
-            result.put(name, result.getOrDefault(name, 0) + 1);
+            Integer gId = gameToGenre.get(p.getGameID());
+            res.merge(genreIdToName.getOrDefault(gId, "Прочее"), 1, Integer::sum);
         }
-        return result;
+        // сортируем по убыванию
+        return res.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, LinkedHashMap::new));
     }
 
     // ── таблица жанров ───────────────────────────────────────────────
     private Component buildGenreTable(Map<String, Integer> counts, int total) {
         VerticalLayout tbl = new VerticalLayout();
-        tbl.setPadding(false);
-        tbl.setSpacing(false);
-        tbl.getStyle().set("min-width", "300px");
+        tbl.setPadding(false); tbl.setSpacing(false);
+        tbl.getStyle().set("min-width", "220px");
 
-        int colorIdx = 0;
+        int ci = 0;
         for (Map.Entry<String, Integer> e : counts.entrySet()) {
             double pct = total > 0 ? (double) e.getValue() / total * 100 : 0;
-            String color = getColor(colorIdx++);
+            String color = getColor(ci++);
 
             HorizontalLayout row = new HorizontalLayout();
             row.setAlignItems(Alignment.CENTER);
-            row.getStyle().set("gap", "10px").set("padding", "6px 0")
-                    .set("border-bottom", "1px solid #f0f2f5");
+            row.getStyle().set("gap", "10px").set("padding", "7px 0")
+                    .set("border-bottom", "1px solid #f1f5f9");
 
             Div dot = new Div();
-            dot.getStyle().set("width", "12px").set("height", "12px")
-                    .set("background", color).set("border-radius", "50%").set("flex-shrink", "0");
+            dot.getStyle().set("width", "10px").set("height", "10px").set("background", color)
+                    .set("border-radius", "50%").set("flex-shrink", "0");
 
             Span name = new Span(e.getKey());
-            name.getStyle().set("font-size", "14px").set("flex", "1");
+            name.getStyle().set("font-size", "13px").set("flex", "1");
 
             Span cnt = new Span(e.getValue() + " шт.");
-            cnt.getStyle().set("font-size", "13px").set("color", "#616161");
+            cnt.getStyle().set("font-size", "12px").set("color", "#6b7280");
 
-            Span pctSpan = new Span(String.format("%.1f%%", pct));
-            pctSpan.getStyle().set("font-size", "13px").set("font-weight", "600")
-                    .set("color", "#1a73e8").set("min-width", "45px").set("text-align", "right");
+            Span pctS = new Span(String.format("%.1f%%", pct));
+            pctS.getStyle().set("font-size", "13px").set("font-weight", "700")
+                    .set("color", "#1a73e8").set("min-width", "42px").set("text-align", "right");
 
-            row.add(dot, name, cnt, pctSpan);
+            row.add(dot, name, cnt, pctS);
             tbl.add(row);
         }
         return tbl;
     }
 
-    // ── SVG круговая диаграмма ───────────────────────────────────────
-    private Component createPieChart(Map<String, Integer> counts, int total) {
-        if (total == 0) {
-            Span empty = new Span("Нет данных");
-            empty.getStyle().set("color", "#9e9e9e");
-            return empty;
+    // ── топ игр ───────────────────────────────────────────────────────
+    private Component buildTopGames(List<Purchase> list) {
+        Map<Integer, Double> rev = new HashMap<>();
+        Map<Integer, String> titles = new HashMap<>();
+        for (Game g : games) titles.put(g.getGameID(), g.getTitle());
+        for (Purchase p : list) rev.merge(p.getGameID(), p.getTotalAmount(), Double::sum);
+
+        List<Map.Entry<Integer, Double>> sorted = rev.entrySet().stream()
+                .sorted(Map.Entry.<Integer, Double>comparingByValue().reversed())
+                .limit(5).collect(Collectors.toList());
+
+        if (sorted.isEmpty()) {
+            Span e = new Span("Нет данных");
+            e.getStyle().set("color", "#9e9e9e"); return e;
         }
 
+        HorizontalLayout row = new HorizontalLayout();
+        row.setWidthFull();
+        row.getStyle().set("gap", "14px").set("flex-wrap", "wrap");
+
+        String[] medals = {"🥇", "🥈", "🥉", "4.", "5."};
+        int idx = 0;
+        for (Map.Entry<Integer, Double> e : sorted) {
+            String title = titles.getOrDefault(e.getKey(), "Игра #" + e.getKey());
+            Div card = new Div();
+            card.addClassName("top-game-card");
+            card.getStyle().set("flex", "1").set("min-width", "140px");
+
+            Div medal = new Div(); medal.addClassName("top-game-medal");
+            medal.setText(medals[idx]);
+            Div name = new Div(); name.addClassName("top-game-name"); name.setText(title);
+            Div amount = new Div(); amount.addClassName("top-game-amount"); amount.setText(money(e.getValue()));
+
+            card.add(medal, name, amount);
+            row.add(card);
+            idx++;
+        }
+        return row;
+    }
+
+    // ── SVG donut ─────────────────────────────────────────────────────
+    private Component createPieChart(Map<String, Integer> counts, int total) {
+        if (total == 0) { Span e = new Span("Нет данных"); e.getStyle().set("color","#9e9e9e"); return e; }
+
         StringBuilder paths = new StringBuilder();
-        double startAngle = -90.0;
-        int colorIdx = 0;
-        int cx = 130, cy = 130, r = 110, ri = 55;
+        double start = -90.0;
+        int ci = 0, cx = 110, cy = 110, r = 90, ri = 48;
 
         for (Map.Entry<String, Integer> e : counts.entrySet()) {
             double pct = (double) e.getValue() / total;
             double sweep = pct * 360.0;
-            double endAngle = startAngle + sweep;
+            double end = start + sweep;
 
-            double x1o = cx + r * Math.cos(Math.toRadians(startAngle));
-            double y1o = cy + r * Math.sin(Math.toRadians(startAngle));
-            double x2o = cx + r * Math.cos(Math.toRadians(endAngle));
-            double y2o = cy + r * Math.sin(Math.toRadians(endAngle));
-            double x1i = cx + ri * Math.cos(Math.toRadians(endAngle));
-            double y1i = cy + ri * Math.sin(Math.toRadians(endAngle));
-            double x2i = cx + ri * Math.cos(Math.toRadians(startAngle));
-            double y2i = cy + ri * Math.sin(Math.toRadians(startAngle));
-
+            double x1o = cx + r  * Math.cos(Math.toRadians(start));
+            double y1o = cy + r  * Math.sin(Math.toRadians(start));
+            double x2o = cx + r  * Math.cos(Math.toRadians(end));
+            double y2o = cy + r  * Math.sin(Math.toRadians(end));
+            double x1i = cx + ri * Math.cos(Math.toRadians(end));
+            double y1i = cy + ri * Math.sin(Math.toRadians(end));
+            double x2i = cx + ri * Math.cos(Math.toRadians(start));
+            double y2i = cy + ri * Math.sin(Math.toRadians(start));
             int la = sweep > 180 ? 1 : 0;
-            String color = getColor(colorIdx++);
+            String color = getColor(ci++);
 
             paths.append(String.format(Locale.US,
-                "<path d='M %.3f %.3f A %d %d 0 %d 1 %.3f %.3f L %.3f %.3f A %d %d 0 %d 0 %.3f %.3f Z' " +
-                "fill='%s' stroke='white' stroke-width='3'/>",
-                x1o, y1o, r, r, la, x2o, y2o, x1i, y1i, ri, ri, la, x2i, y2i, color));
-
-            startAngle = endAngle;
+                "<path d='M%.3f %.3f A%d %d 0 %d 1 %.3f %.3f L%.3f %.3f A%d %d 0 %d 0 %.3f %.3f Z'" +
+                " fill='%s' stroke='white' stroke-width='3'/>",
+                x1o,y1o, r,r, la, x2o,y2o, x1i,y1i, ri,ri, la, x2i,y2i, color));
+            start = end;
         }
 
         String svg = String.format(
-            "<svg width='260' height='260' viewBox='0 0 260 260'>%s" +
-            "<circle cx='130' cy='130' r='45' fill='white'/>" +
-            "<text x='130' y='125' text-anchor='middle' font-size='13' fill='#616161'>Итого</text>" +
-            "<text x='130' y='145' text-anchor='middle' font-size='18' font-weight='bold' fill='#212121'>%d</text>" +
-            "</svg>",
-            paths, total);
+            "<svg width='220' height='220' viewBox='0 0 220 220'>%s" +
+            "<circle cx='110' cy='110' r='42' fill='white'/>" +
+            "<text x='110' y='106' text-anchor='middle' font-size='11' fill='#6b7280' font-family='Inter,sans-serif'>Итого</text>" +
+            "<text x='110' y='126' text-anchor='middle' font-size='22' font-weight='800' fill='#1a1f36' font-family='Inter,sans-serif'>%d</text>" +
+            "</svg>", paths, total);
 
-        Div container = new Div();
-        container.getElement().setProperty("innerHTML", svg);
-        return container;
+        Div c = new Div();
+        c.getElement().setProperty("innerHTML", svg);
+        return c;
+    }
+
+    // ── helpers ───────────────────────────────────────────────────────
+    private List<Purchase> filter(Set<String> statuses) {
+        return purchases.stream().filter(p -> p.getStatus() != null && statuses.contains(p.getStatus()))
+                .collect(Collectors.toList());
+    }
+
+    private String money(double v) {
+        // формат: "26 300,00 ₽" по-русски
+        String raw = String.format(Locale.US, "%,.2f", v); // "26,300.00"
+        String[] parts = raw.split("\\.");
+        String intPart  = parts[0].replace(",", " "); // неразрывный пробел как разделитель тысяч
+        String fracPart = parts.length > 1 ? parts[1] : "00";
+        return intPart + "," + fracPart + " ₽";
     }
 
     private String getColor(int i) {
-        String[] colors = {"#1a73e8","#34a853","#fbbc04","#ea4335","#7b1fa2","#00796b","#c2185b","#ff6d00"};
-        return colors[i % colors.length];
+        String[] c = {"#1a73e8","#34a853","#fbbc04","#ea4335","#7b1fa2","#00796b","#c2185b","#ff6d00"};
+        return c[i % c.length];
     }
 
-    public void redraw() {
-        removeAll();
-        add(createDashboard());
-    }
+    public void redraw() { removeAll(); add(createDashboard()); }
 }

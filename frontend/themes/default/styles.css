@@ -287,3 +287,49 @@ vaadin-grid::part(row selected):hover { background: #ebf3ff; }
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
+
+/* ===== ИКОНКА В КАРТОЧКЕ ===== */
+.metric-icon {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    font-size: 22px;
+    opacity: 0.18;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* ===== ПРОГРЕСС-БАР В КАРТОЧКЕ ===== */
+.metric-progress-bg {
+    height: 4px;
+    background: #e9ecef;
+    border-radius: 2px;
+    margin-top: 12px;
+    overflow: hidden;
+}
+.metric-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+    background: var(--primary);
+}
+.metric-progress-fill.card-success { background: var(--success); }
+.metric-progress-fill.card-warning { background: var(--warning); }
+.metric-progress-fill.card-danger  { background: var(--danger);  }
+.metric-progress-fill.card-neutral { background: #9ca3af; }
+
+/* ===== ТОП ИГР ===== */
+.top-game-card {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+.top-game-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+.top-game-medal { font-size: 22px; margin-bottom: 6px; }
+.top-game-name  { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.3; }
+.top-game-amount { font-size: 15px; font-weight: 800; color: var(--primary); }
