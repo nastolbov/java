@@ -4,6 +4,8 @@ import java.util.List;
 import org.triangle.base.ui.view.Dialog.*;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.button.*;
 import com.vaadin.flow.component.combobox.ComboBox;
@@ -17,7 +19,7 @@ import org.triangle.base.ui.service.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@Route("") // стартовая страница
+@Route("")
 public class MainView extends VerticalLayout {
 
     private Tabs tabs;
@@ -46,6 +48,22 @@ public class MainView extends VerticalLayout {
         this.developerService = developerService;
         this.genreService = genreService;
 
+        setPadding(false);
+        setSpacing(false);
+        getStyle().set("background", "#f0f2f5");
+
+        // ===== ХЕДЕР =====
+        HorizontalLayout header = new HorizontalLayout();
+        header.addClassName("app-header");
+        header.setWidthFull();
+        header.setAlignItems(Alignment.CENTER);
+        H2 title = new H2("🎮 Магазин компьютерных игр");
+        title.addClassName("app-title");
+        Span subtitle = new Span("Система управления");
+        subtitle.addClassName("app-subtitle");
+        header.add(title, subtitle);
+        add(header);
+
         // менеджеры диалогов для каждой вкладки
         GameDialogManager manager = new GameDialogManager(gameService, grid);
         PurchaseDialogManager manager2 = new PurchaseDialogManager(purchaseService, grid2);
@@ -55,6 +73,7 @@ public class MainView extends VerticalLayout {
         tabContents = new HashMap<>();
 
         tabs = new Tabs();
+        tabs.setWidthFull();
         add(tabs);
 
         VerticalLayout content1 = new VerticalLayout();
@@ -206,80 +225,88 @@ public class MainView extends VerticalLayout {
         grid4.getColumns().forEach(col -> col.setResizable(true));
         grid5.getColumns().forEach(col -> col.setResizable(true));
 
-        // контейнеры для кнопок
+        // тулбары (фильтр + кнопки вместе)
         HorizontalLayout hvc1 = new HorizontalLayout();
         HorizontalLayout hvc2 = new HorizontalLayout();
         HorizontalLayout hvc3 = new HorizontalLayout();
         HorizontalLayout hvc4 = new HorizontalLayout();
         HorizontalLayout hvc5 = new HorizontalLayout();
 
-        // контейнеры для фильтров
-        VerticalLayout filterLayout1 = new VerticalLayout();
-        VerticalLayout filterLayout2 = new VerticalLayout();
-        VerticalLayout filterLayout3 = new VerticalLayout();
-        VerticalLayout filterLayout4 = new VerticalLayout();
-        VerticalLayout filterLayout5 = new VerticalLayout();
-        filterLayout1.add(gameFilterLabel, gameComboBox);
-        filterLayout2.add(purchasesFilterLabel, purchasesComboBox);
-        filterLayout3.add(customersFilterLabel, customersComboBox);
-        filterLayout4.add(developersFilterLabel, developersComboBox);
-        filterLayout5.add(genreFilterLabel, genreComboBox);
+        for (HorizontalLayout h : new HorizontalLayout[]{hvc1,hvc2,hvc3,hvc4,hvc5}) {
+            h.addClassName("toolbar");
+            h.setWidthFull();
+            h.setAlignItems(Alignment.BASELINE);
+        }
 
-        content1.add(filterLayout1, grid);
-        content2.add(filterLayout2, grid2);
-        content3.add(filterLayout3, grid3);
-        content4.add(filterLayout4, grid4);
-        content5.add(filterLayout5, grid5);
+        gameFilterLabel.addClassName("filter-label");
+        purchasesFilterLabel.addClassName("filter-label");
+        customersFilterLabel.addClassName("filter-label");
+        developersFilterLabel.addClassName("filter-label");
+        genreFilterLabel.addClassName("filter-label");
+
+        hvc1.add(gameFilterLabel, gameComboBox);
+        hvc2.add(purchasesFilterLabel, purchasesComboBox);
+        hvc3.add(customersFilterLabel, customersComboBox);
+        hvc4.add(developersFilterLabel, developersComboBox);
+        hvc5.add(genreFilterLabel, genreComboBox);
+
+        // оборачиваем таблицы в карточки
+        Div gridCard1 = new Div(grid);  gridCard1.addClassName("grid-card"); gridCard1.setWidthFull();
+        Div gridCard2 = new Div(grid2); gridCard2.addClassName("grid-card"); gridCard2.setWidthFull();
+        Div gridCard3 = new Div(grid3); gridCard3.addClassName("grid-card"); gridCard3.setWidthFull();
+        Div gridCard4 = new Div(grid4); gridCard4.addClassName("grid-card"); gridCard4.setWidthFull();
+        Div gridCard5 = new Div(grid5); gridCard5.addClassName("grid-card"); gridCard5.setWidthFull();
+
+        content1.addClassName("main-content"); content1.add(hvc1, gridCard1);
+        content2.addClassName("main-content"); content2.add(hvc2, gridCard2);
+        content3.addClassName("main-content"); content3.add(hvc3, gridCard3);
+        content4.addClassName("main-content"); content4.add(hvc4, gridCard4);
+        content5.addClassName("main-content"); content5.add(hvc5, gridCard5);
 
         // кнопки для Игр
-        Button addButton = new Button("Добавить");
+        Button addButton = styledBtn("+ Добавить", "btn-add");
         addButton.addClickListener(e -> manager.openAddGameDialog(games));
-        Button chButton = new Button("Изменить");
+        Button chButton = styledBtn("Изменить", "btn-edit");
         chButton.addClickListener(e -> manager.openEditGameDialog());
-        Button delButton = new Button("Удалить");
+        Button delButton = styledBtn("Удалить", "btn-delete");
         delButton.addClickListener(e -> manager.openDelGameDialog(games));
         hvc1.add(addButton, chButton, delButton);
-        content1.add(hvc1);
 
         // кнопки для Покупок
-        Button addButton2 = new Button("Добавить");
+        Button addButton2 = styledBtn("+ Добавить", "btn-add");
         addButton2.addClickListener(e -> manager2.openAddPurchaseDialog(purchases));
-        Button chButton2 = new Button("Изменить");
+        Button chButton2 = styledBtn("Изменить", "btn-edit");
         chButton2.addClickListener(e -> manager2.openEditPurchaseDialog());
-        Button delButton2 = new Button("Удалить");
+        Button delButton2 = styledBtn("Удалить", "btn-delete");
         delButton2.addClickListener(e -> manager2.openDelPurchaseDialog(purchases));
         hvc2.add(addButton2, chButton2, delButton2);
-        content2.add(hvc2);
 
         // кнопки для Покупателей
-        Button addButton3 = new Button("Добавить");
+        Button addButton3 = styledBtn("+ Добавить", "btn-add");
         addButton3.addClickListener(e -> manager3.openAddCustomerDialog(customers));
-        Button chButton3 = new Button("Изменить");
+        Button chButton3 = styledBtn("Изменить", "btn-edit");
         chButton3.addClickListener(e -> manager3.openEditCustomerDialog());
-        Button delButton3 = new Button("Удалить");
+        Button delButton3 = styledBtn("Удалить", "btn-delete");
         delButton3.addClickListener(e -> manager3.openDelCustomerDialog());
         hvc3.add(addButton3, chButton3, delButton3);
-        content3.add(hvc3);
 
         // кнопки для Разработчиков
-        Button addButton4 = new Button("Добавить");
+        Button addButton4 = styledBtn("+ Добавить", "btn-add");
         addButton4.addClickListener(e -> manager4.openAddDeveloperDialog(developers));
-        Button chButton4 = new Button("Изменить");
+        Button chButton4 = styledBtn("Изменить", "btn-edit");
         chButton4.addClickListener(e -> manager4.openEditDeveloperDialog());
-        Button delButton4 = new Button("Удалить");
+        Button delButton4 = styledBtn("Удалить", "btn-delete");
         delButton4.addClickListener(e -> manager4.openDelDeveloperDialog(developers));
         hvc4.add(addButton4, chButton4, delButton4);
-        content4.add(hvc4);
 
         // кнопки для Жанров
-        Button addButton5 = new Button("Добавить");
+        Button addButton5 = styledBtn("+ Добавить", "btn-add");
         addButton5.addClickListener(e -> manager5.openAddGenreDialog(genres));
-        Button chButton5 = new Button("Изменить");
+        Button chButton5 = styledBtn("Изменить", "btn-edit");
         chButton5.addClickListener(e -> manager5.openEditGenreDialog());
-        Button delButton5 = new Button("Удалить");
+        Button delButton5 = styledBtn("Удалить", "btn-delete");
         delButton5.addClickListener(e -> manager5.openDelGenreDialog());
         hvc5.add(addButton5, chButton5, delButton5);
-        content5.add(hvc5);
 
         Tab tab1 = new Tab("Игры");
         Tab tab2 = new Tab("Покупки");
@@ -351,5 +378,11 @@ public class MainView extends VerticalLayout {
         if (initialTab != null) {
             mainContent.add(tabContents.get(initialTab));
         }
+    }
+
+    private Button styledBtn(String label, String cssClass) {
+        Button btn = new Button(label);
+        btn.addClassName(cssClass);
+        return btn;
     }
 }

@@ -1,3 +1,209 @@
+/* ===== ГЛОБАЛЬНЫЕ СТИЛИ ===== */
+:root {
+    --primary: #1a73e8;
+    --primary-dark: #1557b0;
+    --success: #2e7d32;
+    --danger: #c62828;
+    --warning: #e65100;
+    --bg: #f0f2f5;
+    --surface: #ffffff;
+    --border: #e0e0e0;
+    --text: #212121;
+    --text-secondary: #616161;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    margin: 0;
+}
+
+/* ===== ХЕДЕР ===== */
+.app-header {
+    background: linear-gradient(135deg, #1a237e 0%, #1a73e8 100%);
+    color: white;
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.app-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: white !important;
+    margin: 0;
+}
+
+.app-subtitle {
+    font-size: 13px;
+    opacity: 0.75;
+    margin-left: 12px;
+    color: white !important;
+}
+
+/* ===== ВКЛАДКИ ===== */
+vaadin-tabs {
+    background: var(--surface);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    padding: 0 16px;
+}
+
+vaadin-tab {
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--text-secondary);
+    padding: 0 20px;
+    height: 48px;
+}
+
+vaadin-tab[selected] {
+    color: var(--primary) !important;
+    font-weight: 600;
+}
+
+/* ===== ОСНОВНОЙ КОНТЕНТ ===== */
+.main-content {
+    padding: 20px 24px;
+    background: var(--bg);
+    min-height: calc(100vh - 108px);
+}
+
+/* ===== ПАНЕЛЬ ИНСТРУМЕНТОВ ===== */
+.toolbar {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ===== КНОПКИ ===== */
+.btn-add {
+    background: var(--primary) !important;
+    color: white !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    padding: 0 18px !important;
+    height: 36px !important;
+    cursor: pointer;
+    border: none !important;
+    box-shadow: 0 2px 4px rgba(26,115,232,0.3) !important;
+}
+
+.btn-add:hover {
+    background: var(--primary-dark) !important;
+}
+
+.btn-edit {
+    background: white !important;
+    color: var(--primary) !important;
+    border: 1.5px solid var(--primary) !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    padding: 0 18px !important;
+    height: 36px !important;
+    cursor: pointer;
+}
+
+.btn-edit:hover {
+    background: #e8f0fe !important;
+}
+
+.btn-delete {
+    background: white !important;
+    color: var(--danger) !important;
+    border: 1.5px solid var(--danger) !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    padding: 0 18px !important;
+    height: 36px !important;
+    cursor: pointer;
+}
+
+.btn-delete:hover {
+    background: #ffebee !important;
+}
+
+/* ===== ТАБЛИЦА ===== */
+.grid-card {
+    background: var(--surface);
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+vaadin-grid {
+    border: none !important;
+    border-radius: 0 0 10px 10px;
+}
+
+vaadin-grid-cell-content {
+    font-size: 14px;
+    padding: 4px 8px;
+}
+
+/* ===== ФИЛЬТР ===== */
+.filter-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+vaadin-combo-box {
+    min-width: 200px;
+}
+
+/* ===== ДАШБОРД — КАРТОЧКИ ===== */
+.highlight-card {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 20px 24px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-left: 4px solid var(--primary);
+    min-width: 180px;
+    transition: box-shadow 0.2s;
+}
+
+.highlight-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+}
+
+.highlight-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+.highlight-card-value {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    color: var(--primary) !important;
+}
+
+/* ===== ДАШБОРД — СЕКЦИИ ===== */
+.dashboard-section {
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--bg);
 }
