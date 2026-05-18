@@ -157,72 +157,54 @@ public class MainView extends VerticalLayout {
         grid4.setItems(developers);
         grid5.setItems(genres);
 
-        // чтоб столбцы можно было растягивать
+        // порядок столбцов — ID первым
+        grid.setColumns("gameID", "title", "description", "price", "stockQuantity", "genreID", "developerID");
+        grid2.setColumns("purchaseID", "customerID", "gameID", "purchaseDate", "totalAmount", "status", "count");
+        grid3.setColumns("customerID", "name", "email", "phoneNumber", "address", "registrationDate");
+        grid4.setColumns("developerID", "name", "contactName", "phoneNumber", "email", "address");
+        grid5.setColumns("genreID", "name", "description");
+
+        // русские заголовки — Игры
+        grid.getColumnByKey("gameID").setHeader("Код игры");
+        grid.getColumnByKey("title").setHeader("Название");
+        grid.getColumnByKey("description").setHeader("Описание");
+        grid.getColumnByKey("price").setHeader("Цена");
+        grid.getColumnByKey("stockQuantity").setHeader("Количество");
+        grid.getColumnByKey("genreID").setHeader("Код жанра");
+        grid.getColumnByKey("developerID").setHeader("Код разработчика");
+        // Покупки
+        grid2.getColumnByKey("purchaseID").setHeader("Код покупки");
+        grid2.getColumnByKey("customerID").setHeader("Код покупателя");
+        grid2.getColumnByKey("gameID").setHeader("Код игры");
+        grid2.getColumnByKey("purchaseDate").setHeader("Дата покупки");
+        grid2.getColumnByKey("totalAmount").setHeader("Итоговая сумма");
+        grid2.getColumnByKey("status").setHeader("Статус покупки");
+        grid2.getColumnByKey("count").setHeader("Количество");
+        // Покупатели
+        grid3.getColumnByKey("customerID").setHeader("Код покупателя");
+        grid3.getColumnByKey("name").setHeader("ФИО");
+        grid3.getColumnByKey("email").setHeader("Почта");
+        grid3.getColumnByKey("phoneNumber").setHeader("Номер телефона");
+        grid3.getColumnByKey("address").setHeader("Адрес");
+        grid3.getColumnByKey("registrationDate").setHeader("Дата регистрации");
+        // Разработчики
+        grid4.getColumnByKey("developerID").setHeader("Код разработчика");
+        grid4.getColumnByKey("name").setHeader("Название");
+        grid4.getColumnByKey("contactName").setHeader("Контактное имя");
+        grid4.getColumnByKey("phoneNumber").setHeader("Номер телефона");
+        grid4.getColumnByKey("email").setHeader("Почта");
+        grid4.getColumnByKey("address").setHeader("Адрес");
+        // Жанры
+        grid5.getColumnByKey("genreID").setHeader("Код жанра");
+        grid5.getColumnByKey("name").setHeader("Название");
+        grid5.getColumnByKey("description").setHeader("Описание");
+
+        // растягиваемые столбцы
         grid.getColumns().forEach(col -> col.setResizable(true));
         grid2.getColumns().forEach(col -> col.setResizable(true));
         grid3.getColumns().forEach(col -> col.setResizable(true));
         grid4.getColumns().forEach(col -> col.setResizable(true));
         grid5.getColumns().forEach(col -> col.setResizable(true));
-
-        // русские названия столбцов - Игры
-        grid.getColumns().forEach(column -> {
-            String key = column.getKey();
-            switch (key) {
-                case "title": column.setHeader("Название"); break;
-                case "price": column.setHeader("Цена"); break;
-                case "description": column.setHeader("Описание"); break;
-                case "stockQuantity": column.setHeader("Количество"); break;
-                case "gameID": column.setHeader("Код игры"); break;
-                case "genreID": column.setHeader("Код жанра"); break;
-                case "developerID": column.setHeader("Код разработчика"); break;
-            }
-        });
-        // Покупки
-        grid2.getColumns().forEach(column -> {
-            String key = column.getKey();
-            switch (key) {
-                case "count": column.setHeader("Количество"); break;
-                case "customerID": column.setHeader("Код покупателя"); break;
-                case "purchaseID": column.setHeader("Код покупки"); break;
-                case "gameID": column.setHeader("Код игры"); break;
-                case "status": column.setHeader("Статус покупки"); break;
-                case "totalAmount": column.setHeader("Итоговая сумма"); break;
-                case "purchaseDate": column.setHeader("Дата покупки"); break;
-            }
-        });
-        // Покупатели
-        grid3.getColumns().forEach(column -> {
-            String key = column.getKey();
-            switch (key) {
-                case "address": column.setHeader("Адрес"); break;
-                case "customerID": column.setHeader("Код покупателя"); break;
-                case "email": column.setHeader("Почта"); break;
-                case "name": column.setHeader("ФИО"); break;
-                case "phoneNumber": column.setHeader("Номер телефона"); break;
-                case "registrationDate": column.setHeader("Дата регистрации"); break;
-            }
-        });
-        // Разработчики
-        grid4.getColumns().forEach(column -> {
-            String key = column.getKey();
-            switch (key) {
-                case "address": column.setHeader("Адрес"); break;
-                case "developerID": column.setHeader("Код разработчика"); break;
-                case "email": column.setHeader("Почта"); break;
-                case "name": column.setHeader("Название"); break;
-                case "phoneNumber": column.setHeader("Номер телефона"); break;
-                case "contactName": column.setHeader("Контактное имя"); break;
-            }
-        });
-        // Жанры
-        grid5.getColumns().forEach(column -> {
-            String key = column.getKey();
-            switch (key) {
-                case "description": column.setHeader("Описание"); break;
-                case "genreID": column.setHeader("Код жанра"); break;
-                case "name": column.setHeader("Название"); break;
-            }
-        });
 
         // контейнеры для кнопок
         HorizontalLayout hvc1 = new HorizontalLayout();
