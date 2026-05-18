@@ -64,12 +64,6 @@ public class MainView extends VerticalLayout {
         header.add(title, subtitle);
         add(header);
 
-        // менеджеры диалогов для каждой вкладки
-        GameDialogManager manager = new GameDialogManager(gameService, grid);
-        PurchaseDialogManager manager2 = new PurchaseDialogManager(purchaseService, grid2);
-        CustomerDialogManager manager3 = new CustomerDialogManager(customerService, grid3);
-        DeveloperDialogManager manager4 = new DeveloperDialogManager(developerService, grid4);
-        GenreDialogManager manager5 = new GenreDialogManager(genreService, grid5);
         tabContents = new HashMap<>();
 
         tabs = new Tabs();
@@ -89,6 +83,13 @@ public class MainView extends VerticalLayout {
         List<Customer> customers = customerService.getCustomers();
         List<Developer> developers = developerService.getDevelopers();
         List<Genre> genres = genreService.getGenres();
+
+        // менеджеры диалогов для каждой вкладки
+        GameDialogManager manager = new GameDialogManager(gameService, grid, genres, developers);
+        PurchaseDialogManager manager2 = new PurchaseDialogManager(purchaseService, grid2, customers, games);
+        CustomerDialogManager manager3 = new CustomerDialogManager(customerService, grid3);
+        DeveloperDialogManager manager4 = new DeveloperDialogManager(developerService, grid4);
+        GenreDialogManager manager5 = new GenreDialogManager(genreService, grid5);
 
         // фильтры для каждой таблицы
         FieldFilter<Game, String> gamesFilter = new FieldFilter<>(games, Game::getTitle);

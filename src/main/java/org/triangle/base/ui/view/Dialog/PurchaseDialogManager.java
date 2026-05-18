@@ -1,6 +1,7 @@
 package org.triangle.base.ui.view.Dialog;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
@@ -8,50 +9,75 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
-import com.vaadin.flow.component.textfield.TextField;
 
+import org.triangle.base.Class.Model.Customer;
+import org.triangle.base.Class.Model.Game;
 import org.triangle.base.Class.Model.Purchase;
 import org.triangle.base.ui.service.PurchaseService;
 
-import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 public class PurchaseDialogManager {
     private final PurchaseService purchaseService;
     private final Grid<Purchase> grid;
+    private final List<Customer> customers;
+    private final List<Game> games;
 
-    public PurchaseDialogManager(PurchaseService purchaseService, Grid<Purchase> grid) {
+    public PurchaseDialogManager(PurchaseService purchaseService, Grid<Purchase> grid,
+                                 List<Customer> customers, List<Game> games) {
         this.purchaseService = purchaseService;
         this.grid = grid;
+        this.customers = customers;
+        this.games = games;
     }
 
     public void openAddPurchaseDialog(List<Purchase> purchases) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Добавить покупку");
 
-        NumberField customerIDField = new NumberField("Код покупателя");
-        DatePicker datePicker = new DatePicker("Дата покупки");
-        NumberField totalField = new NumberField("Итоговая сумма");
-        TextField statusField = new TextField("Статус");
-        NumberField gameIDField = new NumberField("Код игры");
-        NumberField countField = new NumberField("Количество");
+        ComboBox<Customer> customerBox = new ComboBox<>("Покупатель");
+        customerBox.setItems(customers);
+        customerBox.setItemLabelGenerator(Customer::getName);
 
-        VerticalLayout layout = new VerticalLayout(customerIDField, datePicker, totalField, statusField, gameIDField, countField);
+        ComboBox<Game> gameBox = new ComboBox<>("Игра");
+        gameBox.setItems(games);
+        gameBox.setItemLabelGenerator(Game::getTitle);
+
+        DatePicker datePicker = new DatePicker("Дата покупки");
+        datePicker.setValue(LocalDate.now());
+
+        NumberField totalField = new NumberField("Итоговая сумма");
+        // auto-fill price when game is selected
+        gameBox.addValueChangeListener(e -> {
+            if (e.getValue() != null) {
+                totalField.setValue(e.getValue().getPrice());
+            }
+        });
+
+        NumberField countField = new NumberField("Количество");
+        countField.setValue(1.0);
+
+        ComboBox<String> statusBox = new ComboBox<>("Статус");
+        statusBox.setItems("Оплачено", "Ожидание", "Отменено");
+        statusBox.setValue("Оплачено");
+
+        VerticalLayout layout = new VerticalLayout(customerBox, gameBox, datePicker, totalField, countField, statusBox);
         dialog.add(layout);
 
         Button saveButton = new Button("Сохранить", event -> {
-            if (customerIDField.isEmpty() || gameIDField.isEmpty()) {
-                Notification.show("Заполните обязательные поля");
+            if (customerBox.isEmpty() || gameBox.isEmpty()) {
+                Notification.show("Выберите покупателя и игру");
                 return;
             }
             Purchase purchase = new Purchase(
                     0,
-                    customerIDField.getValue().intValue(),
+                    customerBox.getValue().getCustomerID(),
                     datePicker.getValue(),
-                    totalField.getValue() != null ? totalField.getValue() : 0.0,
-                    statusField.getValue(),
-                    gameIDField.getValue().intValue(),
-                    countField.getValue() != null ? countField.getValue().intValue() : 1
+                    totalField.isEmpty() ? 0.0 : totalField.getValue(),
+                    statusBox.getValue(),
+                    gameBox.getValue().getGameID(),
+                    countField.isEmpty() ? 1 : countField.getValue().intValue()
             );
             purchaseService.createPurchase(purchase);
             purchases.add(purchase);
@@ -61,8 +87,7 @@ public class PurchaseDialogManager {
         });
 
         Button cancelButton = new Button("Отмена", event -> dialog.close());
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
-        dialog.add(buttons);
+        dialog.add(new HorizontalLayout(saveButton, cancelButton));
         dialog.open();
     }
 
@@ -76,12 +101,17 @@ public class PurchaseDialogManager {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Изменить покупку");
 
-        NumberField idField = new NumberField("Код покупки");
-        idField.setValue((double) selected.getPurchaseID());
-        idField.setReadOnly(true);
+        ComboBox<Customer> customerBox = new ComboBox<>("Покупатель");
+        customerBox.setItems(customers);
+        customerBox.setItemLabelGenerator(Customer::getName);
+        customers.stream().filter(c -> c.getCustomerID() == selected.getCustomerID()).findFirst()
+                .ifPresent(customerBox::setValue);
 
-        NumberField customerIDField = new NumberField("Код покупателя");
-        customerIDField.setValue((double) selected.getCustomerID());
+        ComboBox<Game> gameBox = new ComboBox<>("Игра");
+        gameBox.setItems(games);
+        gameBox.setItemLabelGenerator(Game::getTitle);
+        games.stream().filter(g -> g.getGameID() == selected.getGameID()).findFirst()
+                .ifPresent(gameBox::setValue);
 
         DatePicker datePicker = new DatePicker("Дата покупки");
         datePicker.setValue(selected.getPurchaseDate());
@@ -89,25 +119,27 @@ public class PurchaseDialogManager {
         NumberField totalField = new NumberField("Итоговая сумма");
         totalField.setValue(selected.getTotalAmount());
 
-        TextField statusField = new TextField("Статус");
-        statusField.setValue(selected.getStatus() != null ? selected.getStatus() : "");
-
-        NumberField gameIDField = new NumberField("Код игры");
-        gameIDField.setValue((double) selected.getGameID());
-
         NumberField countField = new NumberField("Количество");
         countField.setValue((double) selected.getCount());
 
-        VerticalLayout layout = new VerticalLayout(idField, customerIDField, datePicker, totalField, statusField, gameIDField, countField);
+        ComboBox<String> statusBox = new ComboBox<>("Статус");
+        statusBox.setItems("Оплачено", "Ожидание", "Отменено");
+        if (selected.getStatus() != null) statusBox.setValue(selected.getStatus());
+
+        VerticalLayout layout = new VerticalLayout(customerBox, gameBox, datePicker, totalField, countField, statusBox);
         dialog.add(layout);
 
         Button saveButton = new Button("Сохранить", event -> {
-            selected.setCustomerID(customerIDField.getValue().intValue());
+            if (customerBox.isEmpty() || gameBox.isEmpty()) {
+                Notification.show("Выберите покупателя и игру");
+                return;
+            }
+            selected.setCustomerID(customerBox.getValue().getCustomerID());
+            selected.setGameID(gameBox.getValue().getGameID());
             selected.setPurchaseDate(datePicker.getValue());
-            selected.setTotalAmount(totalField.getValue());
-            selected.setStatus(statusField.getValue());
-            selected.setGameID(gameIDField.getValue().intValue());
-            selected.setCount(countField.getValue().intValue());
+            selected.setTotalAmount(totalField.isEmpty() ? 0.0 : totalField.getValue());
+            selected.setCount(countField.isEmpty() ? 1 : countField.getValue().intValue());
+            selected.setStatus(statusBox.getValue());
             purchaseService.updatePurchase(selected);
             grid.getDataProvider().refreshAll();
             Notification.show("Покупка обновлена");
@@ -115,8 +147,7 @@ public class PurchaseDialogManager {
         });
 
         Button cancelButton = new Button("Отмена", event -> dialog.close());
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
-        dialog.add(buttons);
+        dialog.add(new HorizontalLayout(saveButton, cancelButton));
         dialog.open();
     }
 
@@ -138,14 +169,13 @@ public class PurchaseDialogManager {
                 grid.setItems(purchases);
                 Notification.show("Покупка удалена");
                 dialog.close();
-            } catch (SQLException e) {
+            } catch (Exception e) {
                 Notification.show("Ошибка: " + e.getMessage());
             }
         });
 
         Button cancelButton = new Button("Отмена", event -> dialog.close());
-        HorizontalLayout buttons = new HorizontalLayout(confirmButton, cancelButton);
-        dialog.add(buttons);
+        dialog.add(new HorizontalLayout(confirmButton, cancelButton));
         dialog.open();
     }
 }

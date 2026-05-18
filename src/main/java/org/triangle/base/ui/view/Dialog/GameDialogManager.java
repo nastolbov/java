@@ -1,6 +1,7 @@
 package org.triangle.base.ui.view.Dialog;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.notification.Notification;
@@ -9,7 +10,9 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.component.textfield.TextField;
 
+import org.triangle.base.Class.Model.Developer;
 import org.triangle.base.Class.Model.Game;
+import org.triangle.base.Class.Model.Genre;
 import org.triangle.base.ui.service.GameService;
 
 import java.sql.SQLException;
@@ -18,41 +21,52 @@ import java.util.List;
 public class GameDialogManager {
     private final GameService gameService;
     private final Grid<Game> grid;
+    private final List<Genre> genres;
+    private final List<Developer> developers;
 
-    public GameDialogManager(GameService gameService, Grid<Game> grid) {
+    public GameDialogManager(GameService gameService, Grid<Game> grid,
+                             List<Genre> genres, List<Developer> developers) {
         this.gameService = gameService;
         this.grid = grid;
+        this.genres = genres;
+        this.developers = developers;
     }
 
     public void openAddGameDialog(List<Game> games) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Добавить игру");
 
-        NumberField gameIDField = new NumberField("Код игры");
         TextField titleField = new TextField("Название");
         TextField descField = new TextField("Описание");
         NumberField priceField = new NumberField("Цена");
-        NumberField stockField = new NumberField("Количество");
-        NumberField genreField = new NumberField("Код жанра");
-        NumberField devField = new NumberField("Код разработчика");
+        NumberField stockField = new NumberField("Количество на складе");
 
-        VerticalLayout layout = new VerticalLayout(gameIDField, titleField, descField, priceField, stockField, genreField, devField);
+        ComboBox<Genre> genreBox = new ComboBox<>("Жанр");
+        genreBox.setItems(genres);
+        genreBox.setItemLabelGenerator(Genre::getName);
+
+        ComboBox<Developer> devBox = new ComboBox<>("Разработчик");
+        devBox.setItems(developers);
+        devBox.setItemLabelGenerator(Developer::getName);
+
+        VerticalLayout layout = new VerticalLayout(titleField, descField, priceField, stockField, genreBox, devBox);
         dialog.add(layout);
 
         Button saveButton = new Button("Сохранить", event -> {
             try {
-                if (titleField.isEmpty() || priceField.isEmpty()) {
+                if (titleField.isEmpty() || priceField.isEmpty() || genreBox.isEmpty() || devBox.isEmpty()) {
                     Notification.show("Заполните все обязательные поля");
                     return;
                 }
+                int newID = games.stream().mapToInt(Game::getGameID).max().orElse(0) + 1;
                 Game game = new Game(
-                        gameIDField.getValue().intValue(),
+                        newID,
                         titleField.getValue(),
                         descField.getValue(),
                         priceField.getValue(),
-                        stockField.getValue().intValue(),
-                        genreField.getValue().intValue(),
-                        devField.getValue().intValue()
+                        stockField.isEmpty() ? 0 : stockField.getValue().intValue(),
+                        genreBox.getValue().getGenreID(),
+                        devBox.getValue().getDeveloperID()
                 );
                 gameService.createGame(game);
                 games.add(game);
@@ -65,8 +79,7 @@ public class GameDialogManager {
         });
 
         Button cancelButton = new Button("Отмена", event -> dialog.close());
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
-        dialog.add(buttons);
+        dialog.add(new HorizontalLayout(saveButton, cancelButton));
         dialog.open();
     }
 
@@ -80,10 +93,6 @@ public class GameDialogManager {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Изменить игру");
 
-        NumberField gameIDField = new NumberField("Код игры");
-        gameIDField.setValue((double) selected.getGameID());
-        gameIDField.setReadOnly(true);
-
         TextField titleField = new TextField("Название");
         titleField.setValue(selected.getTitle());
 
@@ -93,26 +102,36 @@ public class GameDialogManager {
         NumberField priceField = new NumberField("Цена");
         priceField.setValue(selected.getPrice());
 
-        NumberField stockField = new NumberField("Количество");
+        NumberField stockField = new NumberField("Количество на складе");
         stockField.setValue((double) selected.getStockQuantity());
 
-        NumberField genreField = new NumberField("Код жанра");
-        genreField.setValue((double) selected.getGenreID());
+        ComboBox<Genre> genreBox = new ComboBox<>("Жанр");
+        genreBox.setItems(genres);
+        genreBox.setItemLabelGenerator(Genre::getName);
+        genres.stream().filter(g -> g.getGenreID() == selected.getGenreID()).findFirst()
+                .ifPresent(genreBox::setValue);
 
-        NumberField devField = new NumberField("Код разработчика");
-        devField.setValue((double) selected.getDeveloperID());
+        ComboBox<Developer> devBox = new ComboBox<>("Разработчик");
+        devBox.setItems(developers);
+        devBox.setItemLabelGenerator(Developer::getName);
+        developers.stream().filter(d -> d.getDeveloperID() == selected.getDeveloperID()).findFirst()
+                .ifPresent(devBox::setValue);
 
-        VerticalLayout layout = new VerticalLayout(gameIDField, titleField, descField, priceField, stockField, genreField, devField);
+        VerticalLayout layout = new VerticalLayout(titleField, descField, priceField, stockField, genreBox, devBox);
         dialog.add(layout);
 
         Button saveButton = new Button("Сохранить", event -> {
             try {
+                if (genreBox.isEmpty() || devBox.isEmpty()) {
+                    Notification.show("Выберите жанр и разработчика");
+                    return;
+                }
                 selected.setTitle(titleField.getValue());
                 selected.setDescription(descField.getValue());
                 selected.setPrice(priceField.getValue());
                 selected.setStockQuantity(stockField.getValue().intValue());
-                selected.setGenreID(genreField.getValue().intValue());
-                selected.setDeveloperID(devField.getValue().intValue());
+                selected.setGenreID(genreBox.getValue().getGenreID());
+                selected.setDeveloperID(devBox.getValue().getDeveloperID());
                 gameService.updateGame(selected);
                 grid.getDataProvider().refreshAll();
                 Notification.show("Игра обновлена");
@@ -123,8 +142,7 @@ public class GameDialogManager {
         });
 
         Button cancelButton = new Button("Отмена", event -> dialog.close());
-        HorizontalLayout buttons = new HorizontalLayout(saveButton, cancelButton);
-        dialog.add(buttons);
+        dialog.add(new HorizontalLayout(saveButton, cancelButton));
         dialog.open();
     }
 
@@ -152,8 +170,7 @@ public class GameDialogManager {
         });
 
         Button cancelButton = new Button("Отмена", event -> dialog.close());
-        HorizontalLayout buttons = new HorizontalLayout(confirmButton, cancelButton);
-        dialog.add(buttons);
+        dialog.add(new HorizontalLayout(confirmButton, cancelButton));
         dialog.open();
     }
 }
