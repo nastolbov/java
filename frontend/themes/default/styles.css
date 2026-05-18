@@ -202,10 +202,16 @@ vaadin-grid::part(header-cell) {
     font-size: 13px;
     font-weight: 500;
     color: var(--text-secondary);
+    white-space: nowrap;
 }
 
-vaadin-combo-box {
-    min-width: 200px;
+vaadin-text-field,
+vaadin-number-field {
+    --vaadin-field-default-width: auto;
+}
+
+.toolbar vaadin-number-field {
+    min-width: 0;
 }
 
 /* ===== ДАШБОРД — КАРТОЧКИ ===== */

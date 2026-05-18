@@ -1,6 +1,7 @@
 package org.triangle.base.ui.view;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import org.triangle.base.ui.view.Dialog.*;
 import com.vaadin.flow.component.tabs.Tab;
 import com.vaadin.flow.component.tabs.Tabs;
@@ -10,6 +11,8 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.button.*;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.component.textfield.NumberField;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -87,88 +90,124 @@ public class MainView extends VerticalLayout {
 
         // менеджеры диалогов для каждой вкладки
         GameDialogManager manager = new GameDialogManager(gameService, grid, genres, developers);
-        PurchaseDialogManager manager2 = new PurchaseDialogManager(purchaseService, grid2, customers, games);
+        PurchaseDialogManager manager2 = new PurchaseDialogManager(purchaseService, grid2, customers, games, purchases);
         CustomerDialogManager manager3 = new CustomerDialogManager(customerService, grid3);
         DeveloperDialogManager manager4 = new DeveloperDialogManager(developerService, grid4);
         GenreDialogManager manager5 = new GenreDialogManager(genreService, grid5);
 
-        // фильтры для каждой таблицы
-        FieldFilter<Game, String> gamesFilter = new FieldFilter<>(games, Game::getTitle);
-        FieldFilter<Purchase, Integer> purchasesFilter = new FieldFilter<>(purchases, Purchase::getPurchaseID);
+        // === Фильтры — Игры: поиск + жанр + диапазон цен ===
+        TextField gameTitleSearch = new TextField();
+        gameTitleSearch.setPlaceholder("Поиск по названию...");
+        gameTitleSearch.setClearButtonVisible(true);
+        gameTitleSearch.setWidth("210px");
+
+        ComboBox<Genre> gameGenreFilter = new ComboBox<>();
+        gameGenreFilter.setItems(genres);
+        gameGenreFilter.setItemLabelGenerator(Genre::getName);
+        gameGenreFilter.setPlaceholder("Жанр");
+        gameGenreFilter.setClearButtonVisible(true);
+        gameGenreFilter.setWidth("155px");
+
+        NumberField minPriceField = new NumberField();
+        minPriceField.setPlaceholder("Цена от");
+        minPriceField.setWidth("110px");
+        minPriceField.setMin(0);
+
+        NumberField maxPriceField = new NumberField();
+        maxPriceField.setPlaceholder("до");
+        maxPriceField.setWidth("95px");
+        maxPriceField.setMin(0);
+
+        Runnable applyGameFilter = () -> {
+            String q = gameTitleSearch.getValue() != null ? gameTitleSearch.getValue().toLowerCase() : "";
+            Genre genre = gameGenreFilter.getValue();
+            Double minP = minPriceField.getValue();
+            Double maxP = maxPriceField.getValue();
+            grid.setItems(games.stream()
+                .filter(g -> q.isEmpty() || g.getTitle().toLowerCase().contains(q))
+                .filter(g -> genre == null || g.getGenreID() == genre.getGenreID())
+                .filter(g -> minP == null || g.getPrice() >= minP)
+                .filter(g -> maxP == null || g.getPrice() <= maxP)
+                .collect(Collectors.toList()));
+        };
+        gameTitleSearch.addValueChangeListener(e -> applyGameFilter.run());
+        gameGenreFilter.addValueChangeListener(e -> applyGameFilter.run());
+        minPriceField.addValueChangeListener(e -> applyGameFilter.run());
+        maxPriceField.addValueChangeListener(e -> applyGameFilter.run());
+
+        // === Фильтры — Покупки: покупатель + статус + диапазон суммы ===
+        ComboBox<Customer> purchaseCustomerFilter = new ComboBox<>();
+        purchaseCustomerFilter.setItems(customers);
+        purchaseCustomerFilter.setItemLabelGenerator(Customer::getName);
+        purchaseCustomerFilter.setPlaceholder("Покупатель");
+        purchaseCustomerFilter.setClearButtonVisible(true);
+        purchaseCustomerFilter.setWidth("210px");
+
+        ComboBox<String> purchaseStatusFilter = new ComboBox<>();
+        purchaseStatusFilter.setItems("Завершён", "Оплачено", "В обработке", "Ожидание", "Отменено");
+        purchaseStatusFilter.setPlaceholder("Статус");
+        purchaseStatusFilter.setClearButtonVisible(true);
+        purchaseStatusFilter.setWidth("155px");
+
+        NumberField minAmountField = new NumberField();
+        minAmountField.setPlaceholder("Сумма от");
+        minAmountField.setWidth("115px");
+        minAmountField.setMin(0);
+
+        NumberField maxAmountField = new NumberField();
+        maxAmountField.setPlaceholder("до");
+        maxAmountField.setWidth("95px");
+        maxAmountField.setMin(0);
+
+        Runnable applyPurchaseFilter = () -> {
+            Customer cust = purchaseCustomerFilter.getValue();
+            String status = purchaseStatusFilter.getValue();
+            Double minA = minAmountField.getValue();
+            Double maxA = maxAmountField.getValue();
+            grid2.setItems(purchases.stream()
+                .filter(p -> cust == null || p.getCustomerID() == cust.getCustomerID())
+                .filter(p -> status == null || status.equals(p.getStatus()))
+                .filter(p -> minA == null || p.getTotalAmount() >= minA)
+                .filter(p -> maxA == null || p.getTotalAmount() <= maxA)
+                .collect(Collectors.toList()));
+        };
+        purchaseCustomerFilter.addValueChangeListener(e -> applyPurchaseFilter.run());
+        purchaseStatusFilter.addValueChangeListener(e -> applyPurchaseFilter.run());
+        minAmountField.addValueChangeListener(e -> applyPurchaseFilter.run());
+        maxAmountField.addValueChangeListener(e -> applyPurchaseFilter.run());
+
+        // === Фильтры — Покупатели, Разработчики, Жанры ===
         FieldFilter<Customer, String> customersFilter = new FieldFilter<>(customers, Customer::getName);
-        FieldFilter<Developer, String> developerFilter = new FieldFilter<>(developers, Developer::getName);
-        FieldFilter<Genre, String> genreFilter = new FieldFilter<>(genres, Genre::getName);
-
-        List<String> gameNames = gamesFilter.getAvailableValues();
-        List<Integer> purchaseIds = purchasesFilter.getAvailableValues();
-        List<String> customerNames = customersFilter.getAvailableValues();
-        List<String> developerNames = developerFilter.getAvailableValues();
-        List<String> genreNames = genreFilter.getAvailableValues();
-
-        // комбобоксы для фильтрации
-        Span gameFilterLabel = new Span("Игра");
-        ComboBox<String> gameComboBox = new ComboBox<>();
-        gameComboBox.setItems(gameNames);
-        gameComboBox.setPlaceholder("Выберите игру");
-        gameComboBox.addValueChangeListener(event -> {
-            String selected = event.getValue();
-            if (selected != null) {
-                grid.setItems(gamesFilter.filterByValue(selected));
-            } else {
-                grid.setItems(games);
-            }
-        });
-
-        Span purchasesFilterLabel = new Span("Номер покупки");
-        ComboBox<Integer> purchasesComboBox = new ComboBox<>();
-        purchasesComboBox.setItems(purchaseIds);
-        purchasesComboBox.setPlaceholder("Выберите покупку");
-        purchasesComboBox.addValueChangeListener(event -> {
-            Integer selected = event.getValue();
-            if (selected != null) {
-                grid2.setItems(purchasesFilter.filterByValue(selected));
-            } else {
-                grid2.setItems(purchases);
-            }
-        });
-
         Span customersFilterLabel = new Span("Покупатель");
+        customersFilterLabel.addClassName("filter-label");
         ComboBox<String> customersComboBox = new ComboBox<>();
-        customersComboBox.setItems(customerNames);
+        customersComboBox.setItems(customersFilter.getAvailableValues());
         customersComboBox.setPlaceholder("Выберите покупателя");
         customersComboBox.addValueChangeListener(event -> {
-            String selected = event.getValue();
-            if (selected != null) {
-                grid3.setItems(customersFilter.filterByValue(selected));
-            } else {
-                grid3.setItems(customers);
-            }
+            String sel = event.getValue();
+            grid3.setItems(sel != null ? customersFilter.filterByValue(sel) : customers);
         });
 
+        FieldFilter<Developer, String> developerFilter = new FieldFilter<>(developers, Developer::getName);
         Span developersFilterLabel = new Span("Разработчик");
+        developersFilterLabel.addClassName("filter-label");
         ComboBox<String> developersComboBox = new ComboBox<>();
-        developersComboBox.setItems(developerNames);
+        developersComboBox.setItems(developerFilter.getAvailableValues());
         developersComboBox.setPlaceholder("Выберите разработчика");
         developersComboBox.addValueChangeListener(event -> {
-            String selected = event.getValue();
-            if (selected != null) {
-                grid4.setItems(developerFilter.filterByValue(selected));
-            } else {
-                grid4.setItems(developers);
-            }
+            String sel = event.getValue();
+            grid4.setItems(sel != null ? developerFilter.filterByValue(sel) : developers);
         });
 
+        FieldFilter<Genre, String> genreFilter = new FieldFilter<>(genres, Genre::getName);
         Span genreFilterLabel = new Span("Жанр");
+        genreFilterLabel.addClassName("filter-label");
         ComboBox<String> genreComboBox = new ComboBox<>();
-        genreComboBox.setItems(genreNames);
+        genreComboBox.setItems(genreFilter.getAvailableValues());
         genreComboBox.setPlaceholder("Выберите жанр");
         genreComboBox.addValueChangeListener(event -> {
-            String selected = event.getValue();
-            if (selected != null) {
-                grid5.setItems(genreFilter.filterByValue(selected));
-            } else {
-                grid5.setItems(genres);
-            }
+            String sel = event.getValue();
+            grid5.setItems(sel != null ? genreFilter.filterByValue(sel) : genres);
         });
 
         // заполняем таблицы
@@ -250,14 +289,8 @@ public class MainView extends VerticalLayout {
             h.setAlignItems(Alignment.BASELINE);
         }
 
-        gameFilterLabel.addClassName("filter-label");
-        purchasesFilterLabel.addClassName("filter-label");
-        customersFilterLabel.addClassName("filter-label");
-        developersFilterLabel.addClassName("filter-label");
-        genreFilterLabel.addClassName("filter-label");
-
-        hvc1.add(gameFilterLabel, gameComboBox);
-        hvc2.add(purchasesFilterLabel, purchasesComboBox);
+        hvc1.add(gameTitleSearch, gameGenreFilter, minPriceField, maxPriceField);
+        hvc2.add(purchaseCustomerFilter, purchaseStatusFilter, minAmountField, maxAmountField);
         hvc3.add(customersFilterLabel, customersComboBox);
         hvc4.add(developersFilterLabel, developersComboBox);
         hvc5.add(genreFilterLabel, genreComboBox);
