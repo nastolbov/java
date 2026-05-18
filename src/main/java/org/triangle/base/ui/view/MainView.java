@@ -295,6 +295,13 @@ public class MainView extends VerticalLayout {
         hvc4.add(developersFilterLabel, developersComboBox);
         hvc5.add(genreFilterLabel, genreComboBox);
 
+        // таблицы — высота на весь экран минус хедер/табы/тулбар
+        String gridH = "calc(100vh - 180px)";
+        for (Grid<?> g : new Grid[]{grid, grid2, grid3, grid4, grid5}) {
+            g.setHeight(gridH);
+            g.setWidthFull();
+        }
+
         // оборачиваем таблицы в карточки
         Div gridCard1 = new Div(grid);  gridCard1.addClassName("grid-card"); gridCard1.setWidthFull();
         Div gridCard2 = new Div(grid2); gridCard2.addClassName("grid-card"); gridCard2.setWidthFull();
