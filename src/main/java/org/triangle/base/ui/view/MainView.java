@@ -10,6 +10,7 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.button.*;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.Route;
@@ -177,53 +178,63 @@ public class MainView extends VerticalLayout {
         grid4.setItems(developers);
         grid5.setItems(genres);
 
-        // порядок столбцов — ID первым
-        grid.setColumns("gameID", "title", "description", "price", "stockQuantity", "genreID", "developerID");
-        grid2.setColumns("purchaseID", "customerID", "gameID", "purchaseDate", "totalAmount", "status", "count");
-        grid3.setColumns("customerID", "name", "email", "phoneNumber", "address", "registrationDate");
-        grid4.setColumns("developerID", "name", "contactName", "phoneNumber", "email", "address");
-        grid5.setColumns("genreID", "name", "description");
+        // === Игры: жанр и разработчик — по имени, цена с символом ₽ ===
+        grid.removeAllColumns();
+        grid.addColumn(Game::getGameID).setHeader("Код").setWidth("70px").setFlexGrow(0).setResizable(true);
+        grid.addColumn(Game::getTitle).setHeader("Название").setResizable(true);
+        grid.addColumn(Game::getDescription).setHeader("Описание").setResizable(true);
+        grid.addColumn(g -> String.format("%.2f ₽", g.getPrice())).setHeader("Цена").setWidth("120px").setFlexGrow(0).setResizable(true);
+        grid.addColumn(Game::getStockQuantity).setHeader("На складе").setWidth("105px").setFlexGrow(0).setResizable(true);
+        grid.addColumn(g -> genres.stream().filter(x -> x.getGenreID() == g.getGenreID()).map(Genre::getName).findFirst().orElse("—")).setHeader("Жанр").setResizable(true);
+        grid.addColumn(g -> developers.stream().filter(x -> x.getDeveloperID() == g.getDeveloperID()).map(Developer::getName).findFirst().orElse("—")).setHeader("Разработчик").setResizable(true);
 
-        // русские заголовки — Игры
-        grid.getColumnByKey("gameID").setHeader("Код игры");
-        grid.getColumnByKey("title").setHeader("Название");
-        grid.getColumnByKey("description").setHeader("Описание");
-        grid.getColumnByKey("price").setHeader("Цена");
-        grid.getColumnByKey("stockQuantity").setHeader("Количество");
-        grid.getColumnByKey("genreID").setHeader("Код жанра");
-        grid.getColumnByKey("developerID").setHeader("Код разработчика");
-        // Покупки
-        grid2.getColumnByKey("purchaseID").setHeader("Код покупки");
-        grid2.getColumnByKey("customerID").setHeader("Код покупателя");
-        grid2.getColumnByKey("gameID").setHeader("Код игры");
-        grid2.getColumnByKey("purchaseDate").setHeader("Дата покупки");
-        grid2.getColumnByKey("totalAmount").setHeader("Итоговая сумма");
-        grid2.getColumnByKey("status").setHeader("Статус покупки");
-        grid2.getColumnByKey("count").setHeader("Количество");
-        // Покупатели
-        grid3.getColumnByKey("customerID").setHeader("Код покупателя");
+        // === Покупки: имя покупателя и название игры, цветной статус ===
+        grid2.removeAllColumns();
+        grid2.addColumn(Purchase::getPurchaseID).setHeader("Код").setWidth("70px").setFlexGrow(0).setResizable(true);
+        grid2.addColumn(p -> customers.stream().filter(c -> c.getCustomerID() == p.getCustomerID()).map(Customer::getName).findFirst().orElse("—")).setHeader("Покупатель").setResizable(true);
+        grid2.addColumn(p -> games.stream().filter(g -> g.getGameID() == p.getGameID()).map(Game::getTitle).findFirst().orElse("—")).setHeader("Игра").setResizable(true);
+        grid2.addColumn(Purchase::getPurchaseDate).setHeader("Дата").setWidth("115px").setFlexGrow(0).setResizable(true);
+        grid2.addColumn(p -> String.format("%.2f ₽", p.getTotalAmount())).setHeader("Сумма").setWidth("125px").setFlexGrow(0).setResizable(true);
+        grid2.addColumn(new ComponentRenderer<>(p -> {
+            Span badge = new Span(p.getStatus() != null ? p.getStatus() : "");
+            badge.addClassName("status-badge");
+            if (p.getStatus() != null) {
+                switch (p.getStatus()) {
+                    case "Завершён": case "Оплачено": badge.addClassName("status-success"); break;
+                    case "В обработке": case "Ожидание": badge.addClassName("status-warning"); break;
+                    case "Отменено": badge.addClassName("status-danger"); break;
+                    default: badge.addClassName("status-neutral"); break;
+                }
+            }
+            return badge;
+        })).setHeader("Статус").setWidth("140px").setFlexGrow(0).setResizable(true);
+        grid2.addColumn(Purchase::getCount).setHeader("Кол-во").setWidth("88px").setFlexGrow(0).setResizable(true);
+
+        // === Покупатели ===
+        grid3.setColumns("customerID", "name", "email", "phoneNumber", "address", "registrationDate");
+        grid3.getColumnByKey("customerID").setHeader("Код").setWidth("70px").setFlexGrow(0);
         grid3.getColumnByKey("name").setHeader("ФИО");
         grid3.getColumnByKey("email").setHeader("Почта");
-        grid3.getColumnByKey("phoneNumber").setHeader("Номер телефона");
+        grid3.getColumnByKey("phoneNumber").setHeader("Телефон");
         grid3.getColumnByKey("address").setHeader("Адрес");
         grid3.getColumnByKey("registrationDate").setHeader("Дата регистрации");
-        // Разработчики
-        grid4.getColumnByKey("developerID").setHeader("Код разработчика");
+        grid3.getColumns().forEach(col -> col.setResizable(true));
+
+        // === Разработчики ===
+        grid4.setColumns("developerID", "name", "contactName", "phoneNumber", "email", "address");
+        grid4.getColumnByKey("developerID").setHeader("Код").setWidth("70px").setFlexGrow(0);
         grid4.getColumnByKey("name").setHeader("Название");
-        grid4.getColumnByKey("contactName").setHeader("Контактное имя");
-        grid4.getColumnByKey("phoneNumber").setHeader("Номер телефона");
+        grid4.getColumnByKey("contactName").setHeader("Контактное лицо");
+        grid4.getColumnByKey("phoneNumber").setHeader("Телефон");
         grid4.getColumnByKey("email").setHeader("Почта");
         grid4.getColumnByKey("address").setHeader("Адрес");
-        // Жанры
-        grid5.getColumnByKey("genreID").setHeader("Код жанра");
+        grid4.getColumns().forEach(col -> col.setResizable(true));
+
+        // === Жанры ===
+        grid5.setColumns("genreID", "name", "description");
+        grid5.getColumnByKey("genreID").setHeader("Код").setWidth("70px").setFlexGrow(0);
         grid5.getColumnByKey("name").setHeader("Название");
         grid5.getColumnByKey("description").setHeader("Описание");
-
-        // растягиваемые столбцы
-        grid.getColumns().forEach(col -> col.setResizable(true));
-        grid2.getColumns().forEach(col -> col.setResizable(true));
-        grid3.getColumns().forEach(col -> col.setResizable(true));
-        grid4.getColumns().forEach(col -> col.setResizable(true));
         grid5.getColumns().forEach(col -> col.setResizable(true));
 
         // тулбары (фильтр + кнопки вместе)

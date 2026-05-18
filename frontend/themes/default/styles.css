@@ -142,11 +142,59 @@ vaadin-tab[selected] {
 vaadin-grid {
     border: none !important;
     border-radius: 0 0 10px 10px;
+    --lumo-row-height: 44px;
 }
 
 vaadin-grid-cell-content {
     font-size: 14px;
     padding: 4px 8px;
+}
+
+vaadin-grid::part(row):hover {
+    background: #f5f8ff;
+}
+
+vaadin-grid::part(row selected) {
+    background: #e8f0fe;
+}
+
+vaadin-grid::part(header-cell) {
+    background: #f8f9fa;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* ===== СТАТУС-БЕЙДЖИ ===== */
+.status-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.status-success {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-warning {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.status-danger {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.status-neutral {
+    background: #f5f5f5;
+    color: #616161;
 }
 
 /* ===== ФИЛЬТР ===== */

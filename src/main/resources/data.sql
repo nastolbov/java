@@ -15,7 +15,7 @@ INSERT INTO Developer (DeveloperID, Name, ContactName, PhoneNumber, Email, Addre
 -- Игры
 INSERT INTO Game (GameID, Title, Description, Price, StockQuantity, GenreID, DeveloperID) VALUES (1, 'The Witcher 3: Wild Hunt', 'Ролевая игра в открытом мире по вселенной Ведьмака', 1499.99, 120, 1, 1);
 INSERT INTO Game (GameID, Title, Description, Price, StockQuantity, GenreID, DeveloperID) VALUES (2, 'Cyberpunk 2077', 'RPG в открытом мире в жанре киберпанк', 1999.99, 85, 1, 1);
-INSERT INTO Game (GameID, Title, Description, Price, StockQuantity, GenreID, DeveloperID) VALUES (3, 'Counter-Strike 2', 'Командный тактический шутер', 0.00, 999, 2, 2);
+INSERT INTO Game (GameID, Title, Description, Price, StockQuantity, GenreID, DeveloperID) VALUES (3, 'Counter-Strike 2', 'Командный тактический шутер', 999.00, 500, 2, 2);
 INSERT INTO Game (GameID, Title, Description, Price, StockQuantity, GenreID, DeveloperID) VALUES (4, 'Half-Life: Alyx', 'VR шутер от первого лица', 2199.99, 45, 2, 2);
 INSERT INTO Game (GameID, Title, Description, Price, StockQuantity, GenreID, DeveloperID) VALUES (5, 'Crusader Kings III', 'Глобальная стратегия средневековья', 1799.99, 60, 3, 3);
 INSERT INTO Game (GameID, Title, Description, Price, StockQuantity, GenreID, DeveloperID) VALUES (6, 'Grand Theft Auto V', 'Экшен-приключение в открытом мире', 999.99, 200, 4, 4);
