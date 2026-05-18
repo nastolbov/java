@@ -321,19 +321,27 @@ public class DashboardView extends VerticalLayout {
         return row;
     }
 
-    // ── SVG donut ─────────────────────────────────────────────────────
+    // ── SVG donut с процентами внутри секторов ───────────────────────
     private Component createPieChart(Map<String, Integer> counts, int total) {
         if (total == 0) { Span e = new Span("Нет данных"); e.getStyle().set("color","#9e9e9e"); return e; }
 
-        StringBuilder paths = new StringBuilder();
+        // cx,cy — центр; r — внешний радиус; ri — внутренний (дырка)
+        int cx = 120, cy = 120, r = 100, ri = 52;
+        double midR = (r + ri) / 2.0; // радиус где ставим текст
+
+        StringBuilder slices = new StringBuilder();
+        StringBuilder labels = new StringBuilder();
         double start = -90.0;
-        int ci = 0, cx = 110, cy = 110, r = 90, ri = 48;
+        int ci = 0;
 
         for (Map.Entry<String, Integer> e : counts.entrySet()) {
-            double pct = (double) e.getValue() / total;
+            double pct   = (double) e.getValue() / total;
             double sweep = pct * 360.0;
-            double end = start + sweep;
+            double end   = start + sweep;
+            int    la    = sweep > 180 ? 1 : 0;
+            String color = getColor(ci++);
 
+            // координаты дуги
             double x1o = cx + r  * Math.cos(Math.toRadians(start));
             double y1o = cy + r  * Math.sin(Math.toRadians(start));
             double x2o = cx + r  * Math.cos(Math.toRadians(end));
@@ -342,22 +350,40 @@ public class DashboardView extends VerticalLayout {
             double y1i = cy + ri * Math.sin(Math.toRadians(end));
             double x2i = cx + ri * Math.cos(Math.toRadians(start));
             double y2i = cy + ri * Math.sin(Math.toRadians(start));
-            int la = sweep > 180 ? 1 : 0;
-            String color = getColor(ci++);
 
-            paths.append(String.format(Locale.US,
-                "<path d='M%.3f %.3f A%d %d 0 %d 1 %.3f %.3f L%.3f %.3f A%d %d 0 %d 0 %.3f %.3f Z'" +
-                " fill='%s' stroke='white' stroke-width='3'/>",
-                x1o,y1o, r,r, la, x2o,y2o, x1i,y1i, ri,ri, la, x2i,y2i, color));
+            slices.append(String.format(Locale.US,
+                "<path d='M%.2f %.2f A%d %d 0 %d 1 %.2f %.2f L%.2f %.2f A%d %d 0 %d 0 %.2f %.2f Z'" +
+                " fill='%s' stroke='white' stroke-width='3.5'/>",
+                x1o, y1o, r, r, la, x2o, y2o,
+                x1i, y1i, ri, ri, la, x2i, y2i, color));
+
+            // процент внутри сектора — только если места хватает (>= 7%)
+            if (pct >= 0.07) {
+                double mid = start + sweep / 2.0;
+                double tx  = cx + midR * Math.cos(Math.toRadians(mid));
+                double ty  = cy + midR * Math.sin(Math.toRadians(mid));
+                String label = String.format("%.0f%%", pct * 100);
+                labels.append(String.format(Locale.US,
+                    "<text x='%.1f' y='%.1f' text-anchor='middle' dominant-baseline='central'" +
+                    " font-size='12' font-weight='700' fill='white'" +
+                    " font-family='Inter,sans-serif' style='text-shadow:0 1px 3px rgba(0,0,0,0.4)'>%s</text>",
+                    tx, ty, label));
+            }
+
             start = end;
         }
 
         String svg = String.format(
-            "<svg width='220' height='220' viewBox='0 0 220 220'>%s" +
-            "<circle cx='110' cy='110' r='42' fill='white'/>" +
-            "<text x='110' y='106' text-anchor='middle' font-size='11' fill='#6b7280' font-family='Inter,sans-serif'>Итого</text>" +
-            "<text x='110' y='126' text-anchor='middle' font-size='22' font-weight='800' fill='#1a1f36' font-family='Inter,sans-serif'>%d</text>" +
-            "</svg>", paths, total);
+            "<svg width='240' height='240' viewBox='0 0 240 240'>" +
+            "%s%s" +
+            "<circle cx='%d' cy='%d' r='46' fill='white'/>" +
+            "<text x='%d' y='%d' text-anchor='middle' font-size='11' fill='#6b7280'" +
+            " font-family='Inter,sans-serif'>Итого</text>" +
+            "<text x='%d' y='%d' text-anchor='middle' font-size='22' font-weight='800'" +
+            " fill='#1a1f36' font-family='Inter,sans-serif'>%d</text>" +
+            "</svg>",
+            slices, labels,
+            cx, cy, cx, cy - 8, cx, cy + 14, total);
 
         Div c = new Div();
         c.getElement().setProperty("innerHTML", svg);

@@ -296,7 +296,7 @@ public class MainView extends VerticalLayout {
         hvc5.add(genreFilterLabel, genreComboBox);
 
         // таблицы — высота на весь экран минус хедер/табы/тулбар
-        String gridH = "calc(100vh - 220px)";
+        String gridH = "calc(100vh - 270px)";
         for (Grid<?> g : new Grid[]{grid, grid2, grid3, grid4, grid5}) {
             g.setHeight(gridH);
             g.setWidthFull();
