@@ -18,11 +18,12 @@ import org.triangle.base.ui.service.GameService;
 import java.sql.SQLException;
 import java.util.List;
 
+// Открывает диалоги добавления / редактирования / удаления для таблицы Игры
 public class GameDialogManager {
     private final GameService gameService;
     private final Grid<Game> grid;
-    private final List<Genre> genres;
-    private final List<Developer> developers;
+    private final List<Genre> genres;       // для ComboBox жанров
+    private final List<Developer> developers; // для ComboBox разработчиков
 
     public GameDialogManager(GameService gameService, Grid<Game> grid,
                              List<Genre> genres, List<Developer> developers) {
@@ -58,6 +59,7 @@ public class GameDialogManager {
                     Notification.show("Заполните все обязательные поля");
                     return;
                 }
+                // ID = max существующего + 1, чтобы не было дублей
                 int newID = games.stream().mapToInt(Game::getGameID).max().orElse(0) + 1;
                 Game game = new Game(
                         newID,
@@ -108,6 +110,7 @@ public class GameDialogManager {
         ComboBox<Genre> genreBox = new ComboBox<>("Жанр");
         genreBox.setItems(genres);
         genreBox.setItemLabelGenerator(Genre::getName);
+        // предзаполняем ComboBox текущим значением выбранной строки
         genres.stream().filter(g -> g.getGenreID() == selected.getGenreID()).findFirst()
                 .ifPresent(genreBox::setValue);
 

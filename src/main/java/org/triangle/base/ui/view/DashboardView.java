@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import org.triangle.base.Class.Model.*;
 
+// Дашборд: метрики, бар-чарт продаж, пай-чарт по жанрам, топ игр
 public class DashboardView extends VerticalLayout {
 
     private List<Game> games;
@@ -22,6 +23,7 @@ public class DashboardView extends VerticalLayout {
     private List<Developer> developers;
     private List<Genre> genres;
 
+    // статусы считаются как реальная выручка (оплачено/завершено)
     private static final Set<String> PAID    = Set.of("Завершён", "Оплачено");
     private static final Set<String> PENDING = Set.of("В обработке", "Ожидание");
 
@@ -321,13 +323,13 @@ public class DashboardView extends VerticalLayout {
         return row;
     }
 
-    // ── SVG donut с процентами внутри секторов ───────────────────────
+    // ── SVG donut без внешних библиотек: рисуем path дуги через тригонометрию ──
     private Component createPieChart(Map<String, Integer> counts, int total) {
         if (total == 0) { Span e = new Span("Нет данных"); e.getStyle().set("color","#9e9e9e"); return e; }
 
-        // cx,cy — центр; r — внешний радиус; ri — внутренний (дырка)
+        // cx,cy — центр; r — внешний радиус; ri — внутренний (отверстие пончика)
         int cx = 120, cy = 120, r = 100, ri = 52;
-        double midR = (r + ri) / 2.0; // радиус где ставим текст
+        double midR = (r + ri) / 2.0; // радиус для подписи процента внутри сектора
 
         StringBuilder slices = new StringBuilder();
         StringBuilder labels = new StringBuilder();

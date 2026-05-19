@@ -1,13 +1,14 @@
 package org.triangle.base.Class.Model;
 
+// Модель таблицы Game: хранит данные одной игры
 public class Game {
     private int gameID;
     private String title;
     private String description;
     private double price;
     private int stockQuantity;
-    private int genreID;
-    private int developerID;
+    private int genreID;      // внешний ключ → Genre.GenreID
+    private int developerID;  // внешний ключ → Developer.DeveloperID
 
     public Game(int gameID, String title, String description, double price, int stockQuantity, int genreID, int developerID) {
         this.gameID = gameID;

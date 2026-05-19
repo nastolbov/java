@@ -7,8 +7,10 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.triangle.base.Class.Model.Game;
 
+// Слой доступа к данным: чистый JDBC без ORM, работает с таблицей Game
 @Service
 public class GameService {
+    // H2 in-memory: база живёт пока работает приложение
     private static final String URL = "jdbc:h2:mem:computer_games";
     private static final String USER = "sa";
     private static final String PASSWORD = "";
@@ -16,7 +18,7 @@ public class GameService {
     public List<Game> getGames() {
         List<Game> games = new ArrayList<>();
         String query = "SELECT * FROM Game";
-
+        // try-with-resources автоматически закрывает соединение
         try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(query)) {
@@ -41,6 +43,7 @@ public class GameService {
 
     public void createGame(Game game) throws SQLException {
         Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        // ? — параметры подставляются через setXxx(), защита от SQL-инъекций
         String insertSQL = """
         INSERT INTO Game (GameID, Title, Description, Price, StockQuantity, GenreID, DeveloperID)
         VALUES (?, ?, ?, ?, ?, ?, ?)

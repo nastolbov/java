@@ -23,11 +23,12 @@ import org.triangle.base.ui.service.*;
 import java.util.HashMap;
 import java.util.Map;
 
+// Главная страница приложения: хедер + вкладки + таблицы + кнопки CRUD
 @Route("")
 public class MainView extends VerticalLayout {
 
     private Tabs tabs;
-    private Map<Tab, VerticalLayout> tabContents;
+    private Map<Tab, VerticalLayout> tabContents; // Tab → контент вкладки
 
     private Grid<Game> grid = new Grid<>(Game.class);
     private GameService gameService;
@@ -118,6 +119,7 @@ public class MainView extends VerticalLayout {
         maxPriceField.setWidth("95px");
         maxPriceField.setMin(0);
 
+        // все 4 фильтра запускают один Runnable — критерий игнорируется если поле пустое
         Runnable applyGameFilter = () -> {
             String q = gameTitleSearch.getValue() != null ? gameTitleSearch.getValue().toLowerCase() : "";
             Genre genre = gameGenreFilter.getValue();
@@ -295,7 +297,7 @@ public class MainView extends VerticalLayout {
         hvc4.add(developersFilterLabel, developersComboBox);
         hvc5.add(genreFilterLabel, genreComboBox);
 
-        // таблицы — высота на весь экран минус хедер/табы/тулбар
+        // высота = весь экран минус хедер + табы + тулбар (~270px)
         String gridH = "calc(100vh - 270px)";
         for (Grid<?> g : new Grid[]{grid, grid2, grid3, grid4, grid5}) {
             g.setHeight(gridH);
@@ -387,7 +389,7 @@ public class MainView extends VerticalLayout {
             mainContent.removeAll();
             Tab selectedTab = event.getSelectedTab();
 
-            // перечитываем данные из БД при каждом переключении вкладки
+            // clear+addAll сохраняет ту же ссылку на список, которую держат фильтры и диалоги
             if (selectedTab == tab1) {
                 games.clear();
                 games.addAll(gameService.getGames());
@@ -432,6 +434,7 @@ public class MainView extends VerticalLayout {
         }
     }
 
+    // создаёт кнопку с нужным CSS-классом (btn-add / btn-edit / btn-delete)
     private Button styledBtn(String label, String cssClass) {
         Button btn = new Button(label);
         btn.addClassName(cssClass);

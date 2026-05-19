@@ -2,13 +2,14 @@ package org.triangle.base.Class.Model;
 
 import java.time.LocalDate;
 
+// Модель таблицы Purchase: одна строка = один заказ
 public class Purchase {
     private int purchaseID;
-    private int customerID;
+    private int customerID;   // внешний ключ → Customer.CustomerID
     private LocalDate purchaseDate;
     private double totalAmount;
-    private String status;
-    private int gameID;
+    private String status;    // "Оплачено" | "Завершён" | "Ожидание" | "В обработке" | "Отменено"
+    private int gameID;       // внешний ключ → Game.GameID
     private int count;
 
     public Purchase(int purchaseID, int customerID, LocalDate purchaseDate, double totalAmount, String status, int gameID, int count) {

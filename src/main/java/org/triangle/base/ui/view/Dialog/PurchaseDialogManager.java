@@ -18,12 +18,13 @@ import org.triangle.base.ui.service.PurchaseService;
 import java.time.LocalDate;
 import java.util.List;
 
+// Открывает диалоги добавления / редактирования / удаления для таблицы Покупки
 public class PurchaseDialogManager {
     private final PurchaseService purchaseService;
     private final Grid<Purchase> grid;
-    private final List<Customer> customers;
-    private final List<Game> games;
-    private final List<Purchase> purchases;
+    private final List<Customer> customers; // для ComboBox покупателей
+    private final List<Game> games;         // для ComboBox игр + автоподстановка цены
+    private final List<Purchase> purchases; // ссылка на живой список в MainView
 
     public PurchaseDialogManager(PurchaseService purchaseService, Grid<Purchase> grid,
                                  List<Customer> customers, List<Game> games,
@@ -56,7 +57,7 @@ public class PurchaseDialogManager {
         countField.setValue(1.0);
         countField.setMin(1);
 
-        // авторасчёт суммы
+        // авторасчёт суммы при выборе игры или изменении количества
         gameBox.addValueChangeListener(e -> {
             if (e.getValue() != null) {
                 double count = countField.isEmpty() ? 1.0 : countField.getValue();
@@ -166,8 +167,7 @@ public class PurchaseDialogManager {
             selected.setTotalAmount(totalField.isEmpty() ? 0.0 : totalField.getValue());
             selected.setStatus(statusBox.getValue());
             purchaseService.updatePurchase(selected);
-            // setItems надёжнее чем refreshAll для ComponentRenderer
-            grid.setItems(purchases);
+            grid.setItems(purchases); // setItems надёжнее чем refreshAll для ComponentRenderer с бейджами
             Notification.show("Покупка обновлена");
             dialog.close();
         });
